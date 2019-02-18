@@ -50,9 +50,9 @@ int numGMItems = 0;
 int numParishableItems = 0;
 
 int main() {
-    // testFileIOandPricing();
+    testFileIOandPricing();
     // checkout();
-    performAdminFunctions();
+    // performAdminFunctions();
     return 0;
 }// end main()
 
@@ -253,7 +253,7 @@ void checkout() {
 
 
 void printPOSHeader() {
-    cout << left << "CODE\t" << "NAME" <<  right << setw(27) << "PRICE" << setw(10) << "MINIMUM AGE" << endl;
+    cout << left << "CODE\t" << "NAME" <<  right << setw(26) << "PRICE" << endl;
 }
 
 
@@ -261,6 +261,7 @@ void printPOSHeader() {
 void testFileIOandPricing() {
     // cout << "Enter the input file name with extension: ";
     // getline(cin, inFileName);
+    printPOSHeader();
     file_status_t fInStatus = openFileIn(ifs, inFileName);
     if(!fInStatus) {
         cout << "Error opening file \"" << inFileName << "\"" << endl;
@@ -303,6 +304,8 @@ void printAdminInfo(GMItem * cart[], const int& numItems) {
         cout  << items[i]->toStringAdmin() << endl;
     }
 }
+
+
 
 void performAdminFunctions() {
     string input;
