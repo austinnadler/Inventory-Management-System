@@ -13,6 +13,13 @@ GMItem::GMItem(const string& name, const double& price, const int& numOnHand, co
 : name(name), price(price), numOnHand(numOnHand), code(code)
 {}
 
+
+string GMItem::toStringBack() const {
+    ostringstream oss;
+    oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}
+
 bool GMItem::setItemName(const string& name)  {
     if(!(name.length() > MAX_NAME_LENGTH)) {
         this -> name = name;
@@ -25,31 +32,25 @@ bool GMItem::setItemName(const string& name)  {
 
 
 bool GMItem::setItemPrice(const string& price){
-    if(!(price.length() > MAX_PRICE_LENGTH)) {
         try {
             this -> price = stod(price);
             return true;
         } catch (invalid_argument e) {
             return false;
         }
-    } else {
-        return false;
-    }
+    
 }
 
 
 
 bool GMItem::setNumOnHand(const string& n) {
-    if(!(n.length() > MAX_PRICE_LENGTH)) {
-        try {
-            this -> numOnHand = stoi(n);
-            return true;
-        } catch (invalid_argument e) {
-            return false;
-        }
-    } else {
-        return false;
+    try {
+        this -> numOnHand = stoi(n);
+        return true;
+    } catch (invalid_argument e) {
+         return false;
     }
+    
 }
 
 
@@ -77,16 +78,13 @@ bool GMItem::increaseCount(const string& n) {
 
 
 bool GMItem::setItemCode(const string& code) {
-    if(!(code.length() > MAX_CODE_LENGTH)) {
         try {
             this -> code = stoi(code);
             return true;
         } catch (invalid_argument e) {
             return false;
         }
-    } else {
-        return false;
-    }
+    
 }
 
 

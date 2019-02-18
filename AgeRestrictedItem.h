@@ -19,11 +19,12 @@ public:
     
     bool setMinAge(const string& minAge);
 
-    int getMinAge() const             { return minAge; }//end getExpirationDate()
+    int getMinAge() const  { return minAge; }//end getExpirationDate()
     
     virtual string toStringPOS() const;
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;
+    virtual string toStringBack() const; 
 };
 
 #endif

@@ -13,6 +13,13 @@ string ParishableItem::toStringPOS() const {
     return oss.str();
 }// end toStringPOS()
 
+
+string ParishableItem::toStringBack() const {
+    ostringstream oss;
+    oss << "pa," << expirationDate << "," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}
+
 bool ParishableItem::setExpirationDate(const string& expirationDate) {
     if(!(expirationDate.length() > MAX_EXPDATE_LENGTH)) {
         try {

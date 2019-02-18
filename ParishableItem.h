@@ -27,6 +27,8 @@ public:
     virtual string toStringPOS() const;
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;
+    virtual string toStringBack() const;
+
 };
 
 #endif

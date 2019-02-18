@@ -13,6 +13,13 @@ string AgeRestrictedItem::toStringPOS() const {
     return oss.str();
 }// end toStringPOS()
 
+
+string AgeRestrictedItem::toStringBack() const {
+    ostringstream oss;
+    oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}
+
 bool AgeRestrictedItem::setMinAge(const string& minAge) {
     try {
         this -> minAge = stoi(minAge);
