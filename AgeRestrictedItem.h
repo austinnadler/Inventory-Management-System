@@ -17,7 +17,7 @@ public:
     {}
     ~AgeRestrictedItem() {}//end AgeRestrictedItem()
     
-    void setMinAge(const int& minAge) { this -> minAge = minAge; }//end setExpirationDate()
+    bool setMinAge(const string& minAge);
 
     int getMinAge() const             { return minAge; }//end getExpirationDate()
     

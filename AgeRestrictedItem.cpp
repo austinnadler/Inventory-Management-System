@@ -13,6 +13,15 @@ string AgeRestrictedItem::toStringPOS() const {
     return oss.str();
 }// end toStringPOS()
 
+bool AgeRestrictedItem::setMinAge(const string& minAge) {
+    try {
+        this -> minAge = stoi(minAge);
+        return true;
+    } catch(invalid_argument e) {
+        return false;
+    }
+}
+
 string AgeRestrictedItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() <<  " Minimum Age: " << setw(10) << right << getMinAge() ;

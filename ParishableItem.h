@@ -12,12 +12,15 @@ class ParishableItem : public GMItem {
 private:
     string expirationDate;
 public:
+    const int MAX_EXPDATE_LENGTH = 20;
     ParishableItem(const string& expirationDate = "MM/DD/YY", const string& name = "NA", const double& price = 0.0, const int& numOnHand = 0, const int& code = -1)  
     :   GMItem(name, price, numOnHand, code), expirationDate(expirationDate)
     {}//end ParishableItem()
     ~ParishableItem() {}//end ParishableItem()
 
-    void setExpirationDate(const string& expirationDate) { this -> expirationDate = expirationDate; }//end setExpirationDate()
+    bool setExpirationDate(const string& expirationDate); // any format, but must be short than 20 characters
+
+    int getMaxDateLength() { return MAX_EXPDATE_LENGTH; }
 
     string getExpirationDate() const                     { return expirationDate; }//end getExpirationDate()
     

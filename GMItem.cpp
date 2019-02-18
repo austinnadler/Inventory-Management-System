@@ -13,12 +13,91 @@ GMItem::GMItem(const string& name, const double& price, const int& numOnHand, co
 : name(name), price(price), numOnHand(numOnHand), code(code)
 {}
 
+bool GMItem::setItemName(const string& name)  {
+    if(!(name.length() > MAX_NAME_LENGTH)) {
+        this -> name = name;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+
+bool GMItem::setItemPrice(const string& price){
+    if(!(price.length() > MAX_PRICE_LENGTH)) {
+        try {
+            this -> price = stod(price);
+            return true;
+        } catch (invalid_argument e) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+
+
+bool GMItem::setNumOnHand(const string& n) {
+    if(!(n.length() > MAX_PRICE_LENGTH)) {
+        try {
+            this -> numOnHand = stoi(n);
+            return true;
+        } catch (invalid_argument e) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+
+
+bool GMItem::decreaseCount(const string& n) {
+    try {
+        this -> numOnHand -= stoi(n);
+        return true;
+    } catch (invalid_argument e) {
+        return false;
+    }
+}
+
+
+
+bool GMItem::increaseCount(const string& n) {
+    try {
+        this -> numOnHand += stoi(n);
+        return true;
+    } catch (invalid_argument e) {
+        return false;
+    }
+}
+
+
+
+bool GMItem::setItemCode(const string& code) {
+    if(!(code.length() > MAX_CODE_LENGTH)) {
+        try {
+            this -> code = stoi(code);
+            return true;
+        } catch (invalid_argument e) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+
 
 string GMItem::toStringPOS() const {
     ostringstream oss;
-    oss << left << code << "\t" << setw(25) << setfill('.') << name << right << fixed << setprecision(2) << price;
+    oss << left << code << "\t" << setw(25) << setfill('.') << name << fixed << setprecision(2) << price;
     return oss.str();
 }// end toStringPOS()
+
+
 
 string GMItem::toStringAdmin() const {
     ostringstream oss;

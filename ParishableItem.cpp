@@ -13,11 +13,24 @@ string ParishableItem::toStringPOS() const {
     return oss.str();
 }// end toStringPOS()
 
+bool ParishableItem::setExpirationDate(const string& expirationDate) {
+    if(!(expirationDate.length() > MAX_EXPDATE_LENGTH)) {
+        try {
+            this -> expirationDate = expirationDate;
+            return true;
+        } catch (invalid_argument e) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}// end setExpirationDate
+
 string ParishableItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() << " Expiration: "  << setw(11) << right << getExpirationDate();
     return oss.str();
-}
+}// and toStringAdmin()
 
 string ParishableItem::toStringFile() const {
     ostringstream oss;
