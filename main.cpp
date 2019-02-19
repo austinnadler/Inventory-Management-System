@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 #include "GMItem.h"
-#include "ParishableItem.h"
+#include "ExpiringItem.h"
 #include "AgeRestrictedItem.h"
 
 using namespace std;
@@ -15,43 +15,42 @@ using file_status_t = bool;
 using num_items_t = int;
 using total_price_t = double;
 
-const int MAX_SIZE = 500;
+const int MAX_SIZE = 5000;
+
 const double TAX_RATE = 0.071; // Illinois 7.1%
 
 void testFileIOandPricing(); // Original main method for testing file reading and writing 
 void performAdminFunctions();
+void checkout(); // create a new array of pointers and put the items that you want to buy into it. Program totals the purchase and adds tax
 // ADD: sorting by name and number when printing or writing items
 // FIX: writeItems needs to be updated to print the different types of items in their own tables to seperate the special fields
 void writeItems(ofstream& ofs, GMItem * cart[], const int& numItems); // To file, includes expiration, age restrictions, etc. formatted for a csv file
-void printItems(GMItem * cart[], const int& numItems);                // To screen, displays only code, name, and price with periods for spacing
 void writeBack(ofstream& ofs, GMItem * items[], const int& numItems);
-void printAdminInfo(GMItem * cart[], const int& numItems); // outputs list with all special information
 void writeAdminInfo(ofstream& ofs, GMItem * cart[], const int& numItems); //To file, all admin info. works as keeping a log of current inventory
-void checkout(); // create a new array of pointers and put the items that you want to buy into it. Program totals the purchase and adds tax
+
+void printItems(GMItem * cart[], const int& numItems);                // To screen, displays only code, name, and price with periods for spacing
+void printAdminInfo(GMItem * cart[], const int& numItems); // outputs list with all special information
 void printPOSPriceSection(GMItem * items[], const int& numItems);// print subtotal, taxes, and total
 void printPOSHeader(); // print the header: CODE    NAME   .... and so on
+
 void sortItemsByName(GMItem * items[], const int& numItems);
 void sortItemsByCode(GMItem * items[], const int& numItems);
-void addItemToList(GMItem * items[], const int& numItems, GMItem * newItem);
+
+bool addItemToList(GMItem * items[], int& numItems, GMItem * newItem);
+bool removeLastItem(GMItem * items[], int& numItems);
 
 total_price_t calculateTax(const double& subTotal);
-total_price_t calculateSubtotal(GMItem items[], ParishableItem parsihableItems[], const int& numGMItems, const int& numParishableItems);
 total_price_t calculateTotal(double& subTotal);
 
 num_items_t loadItemsFromFile(ifstream& ifs, GMItem * items[]); // counts passed by reference so they can both be changed
 file_status_t openFileIn(ifstream& ifs, const string& fileName);
 file_status_t openFileOut(ofstream& ofs, const string& fileName);
 
-GMItem * items [MAX_SIZE];
-
-ifstream ifs;
-ofstream ofs;
-
 string inFileName = "items.txt";
 string outFileName = "itemsOut.csv";
 
 int numGMItems = 0;
-int numParishableItems = 0;
+int numExpiringItems = 0;
 
 int main() {
     // testFileIOandPricing();
@@ -85,7 +84,7 @@ total_price_t calculateTax(const double& subTotal) {
 
 
 // Take an ifs and an empty array and fill said array with items from a FORMATTED file
-num_items_t loadItemsFromFile(ifstream& ifs, GMItem * gmItems[]) {
+num_items_t loadItemsFromFile(ifstream& ifs, GMItem * items[]) {
     string itemType;
     string name;
     string price;
@@ -97,19 +96,19 @@ num_items_t loadItemsFromFile(ifstream& ifs, GMItem * gmItems[]) {
 
     using type_id_t = string;
     type_id_t ageRestricted = "ar";
-    type_id_t parishable = "pa";
+    type_id_t warning = "warn";
     type_id_t general = "gm";
 
     getline(ifs, itemType, ',');
     while(!ifs.eof()) {
-        if(itemType == parishable) {
+        if(itemType == warning) {
             getline(ifs, expirationDate, ',');
             getline(ifs, name, ',');
             getline(ifs, price, ',');
             getline(ifs, qtyOnHand, ',');
             getline(ifs, code);
 
-            items[numItems++] = new ParishableItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
+            items[numItems++] = new ExpiringItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
             getline(ifs, itemType, ',');
         } else if (itemType == general) {
             getline(ifs, name, ',');
@@ -183,14 +182,17 @@ void checkout() {
     int numItemsInCart = 0;
     double subTotal = 0;
     bool foundItem = false;
+    GMItem * inventory[MAX_SIZE];
     GMItem * cart[MAX_SIZE];
+    ifstream ifs;
+    ofstream ofs;
 
     file_status_t fInStatus = openFileIn(ifs, inFileName);
     if(!fInStatus) {
         cout << "Error opening file \"" << inFileName << "\"" << endl;
         exit(1);
     }
-    num_items_t numItems = loadItemsFromFile(ifs, items); 
+    num_items_t numItems = loadItemsFromFile(ifs, inventory); 
 
     do { 
         foundItem = false;
@@ -209,54 +211,66 @@ void checkout() {
             cout << endl;
                     printPOSHeader();
                     printItems(cart, numItemsInCart);
-                    subTotal = calculateSubtotal(cart, numItemsInCart);  
                     printPOSPriceSection(cart, numItemsInCart);
                     for(int i = 0; i < numItemsInCart; i++) {
                         cart[i]->decreaseCount();
                     }
             cout << endl;
-        }
+        } else if (codeString == "undo") {
+                if(numItemsInCart < 1) {
+                    cout << endl << "The list is already empty!" << endl;
+                } else {
+                    removeLastItem(cart, numItemsInCart);
+                    printPOSHeader();
+                    printItems(cart, numItemsInCart);
+                    printPOSPriceSection(cart, numItemsInCart);
+                }
 
-        try {
-            code = stoi(codeString);
-            for(int i = 0; i < numItems; i++) {
-                if(code == items[i]->getItemCode()) {
-                    cart[numItemsInCart] = items[i];
+        } else {
+                try {
+                    code = stoi(codeString);
+                    for(int i = 0; i < numItems; i++) {
+                        
+                        // FIX: This code does not work
+                        // if (foundItem == false && i == numItems) { 
+                        //     cout << "No item with that code was found in the inventory file." << endl;
+                        // } 
 
-                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
+                        if(code == inventory[i]->getItemCode()) {
+                            cart[numItemsInCart] = inventory[i];
 
-                    GMItem *gm = items[i];
-                    AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
-                    if(ar != NULL) {
-                        string valid;
-                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
-                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
-                        getline(cin, valid);
-                        if(valid == "y") {
-                            oss << cart[numItemsInCart]->toStringPOS();
-                            subTotal += cart[numItemsInCart++]->getItemPrice();
-                            foundItem = true;
-                        } else {
-                            cout << "Customer cannot purchase this item." << endl;
-                        }
-                    } else {
-                        oss << cart[numItemsInCart]->toStringPOS();
-                        subTotal += cart[numItemsInCart++]->getItemPrice();
-                        foundItem = true;
+                            // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
+
+                            GMItem *gm = inventory[i];
+                            AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
+                            if(ar != NULL) {
+                                string valid;
+                                cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
+                                cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
+                                getline(cin, valid);
+                                if(valid == "y") {
+                                    oss << cart[numItemsInCart]->toStringPOS();
+                                    subTotal += cart[numItemsInCart++]->getItemPrice();
+                                    foundItem = true;
+                                } else {
+                                    cout << "Customer cannot purchase this item." << endl;
+                                }
+                            } else {
+                                oss << cart[numItemsInCart]->toStringPOS();
+                                subTotal += cart[numItemsInCart++]->getItemPrice();
+                                foundItem = true;
+                            }
+                        }                     
                     }
-                } else { foundItem = false; } 
-            }
-        // add something to catch and notify if code wasn't found
-        
-        } catch(exception e) {
-            cout << "Invalid Code Entered!" << endl;
+                } catch(exception e) {
+                    cout << "Invalid Code Entered!" << endl;
+                }
         }
 
         cout << endl;
                 printPOSHeader();
                 printItems(cart, numItemsInCart);
             cout << endl;
-                subTotal = calculateSubtotal(cart, numItemsInCart);     
                 printPOSPriceSection(cart, numItemsInCart);
         cout << endl;
         
@@ -272,6 +286,9 @@ void printPOSHeader() {
 
 // test some of the base functions -- doesn't include subclass info just code, name, price
 void testFileIOandPricing() {
+    ifstream ifs;
+    ofstream ofs;
+    GMItem * items[MAX_SIZE];
     // cout << "Enter the input file name with extension: ";
     // getline(cin, inFileName);
     printPOSHeader();
@@ -312,7 +329,7 @@ void printPOSPriceSection(GMItem * items[], const int& numItems) {
 
 
 
-void printAdminInfo(GMItem * cart[], const int& numItems) {
+void printAdminInfo(GMItem * items[], const int& numItems) {
      for(int i = 0; i < numItems; i++) {
         cout << "----------|---------------------|-----------|--------|-------------------------" << endl;
         cout  << items[i]->toStringAdmin() << endl;
@@ -327,6 +344,9 @@ void performAdminFunctions() {
     string thisOutFileName = "newlog.txt";
     bool found = false;
     bool validIn;
+    ifstream ifs;
+    ofstream ofs;
+    GMItem * inventory[MAX_SIZE];
 
     // cout << "Enter the inventory list file name with extension: ";
     // getline(cin, thisInfileName);
@@ -349,15 +369,11 @@ void performAdminFunctions() {
         exit(1);
     }
 
-    num_items_t numItems = loadItemsFromFile(ifs, items); 
+    num_items_t numItems = loadItemsFromFile(ifs, inventory); 
     do {
         cout << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
-        printAdminInfo(items, numItems);
+        printAdminInfo(inventory, numItems);
         cout << "----------|---------------------|-----------|--------|-------------------------" << endl;
-
-
-
-
 
     cout << "1. Manage current inventory" << endl
          << "2. Add item" << endl
@@ -372,175 +388,178 @@ void performAdminFunctions() {
 
             getline(cin, input);
             for(int i = 0; i < numItems && found == false; i++) {
-                if(items[i]->getItemCode() == stoi(input)) {
+                if(inventory[i]->getItemCode() == stoi(input)) {
+                    GMItem * itemPtr = inventory[i];
                     found = true;
                     cout << endl 
-                        << "Item found: " << items[i]->getItemName() << endl << endl
+                        << "Item found: " << itemPtr->getItemName() << endl << endl
                         << "1. Change number on hand" << endl
                         << "2. Change price" << endl
                         << "3. Change item name" << endl
                         << "4. Change item code" << endl
-                        << "5. Change item expiration date" << endl
+                        << "5. Change item warning prompt" << endl
                         << "6. Change item minimum age" << endl
-                        << "Enter the number of the action you want to perform: ";
+                        << "Enter the number of the action you want to perform: ";    
                     getline(cin,input);
+
                     if(input == "1") {
-                                        cout << endl
-                                            << "1. Add to the current count" << endl
-                                            << "2. Subtract from the current count" << endl
-                                            << "3. Enter a completely new count" << endl
+                                       cout << endl
+                                            << "a. Add to the current count" << endl
+                                            << "b. Subtract from the current count" << endl
+                                            << "c. Enter a completely new count" << endl
                                             << "Enter the number of the action you want to perform: ";
                                         getline(cin, input);
-                                        if(input == "1") {
-                                            cout << "Enter the number by which you want to increase the on hand count: ";
-                                            getline(cin, input);
-                                            
-                                            validIn = items[i]->increaseCount(input);
-                                            while(!validIn) {
-                                                cout << "Couldn't convert to an int, enter 0 to exit this command or enter a new integer value: ";
+                                        if(input == "a") {
+                                            do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
                                                 getline(cin, input);
-                                                validIn = items[i]->increaseCount(input);
-                                            }  
-                                        } else if (input == "2") {
-                                            cout << "Enter the number by which you want to decrease the on hand count: ";
-                                            getline(cin, input);
-                                            validIn = items[i]->decreaseCount(input);
-                                            while(!validIn) {
-                                                cout << "Couldn't convert to an int, enter 0 to exit this command or enter a new integer value: ";
+                                                validIn = itemPtr->increaseCount(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
+                                        } else if (input == "b") {
+                                            do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
                                                 getline(cin, input);
-                                                validIn = items[i]->decreaseCount(input);
-                                            }             
-                                        } else if(input == "3") {
-                                            cout << "Enter the new on hand count: ";
-                                            getline(cin, input);
-                                            validIn = items[i]->setNumOnHand(input);
-                                            while(!validIn) {
-                                                cout << "Couldn't convert to an int, or the new number was too large or too small." << endl
-                                                    << "Enter 0 to exit this command or enter a new integer value: ";
+                                                validIn = itemPtr->decreaseCount(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;     
+                                        } else if(input == "c") {
+                                            do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
-                                                validIn = items[i]->setNumOnHand(input);
-                                            }  
+                                                validIn = itemPtr->setNumOnHand(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
                                         }
                     } else if(input == "2") {
-                                            cout << "Enter the new price (ex. 123456.89): ";
-                                            getline(cin, input);
-                                            validIn = items[i]->setItemPrice(input);
-                                            while(!validIn) {
-                                                cout << "Couldn't convert to a double" << endl
-                                                    << "Enter a new integer value or 0 to exit this command: ";
+                                            do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Enter the new price for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
-                                                validIn = items[i]->setItemPrice(input);
-                                            }                       
+                                                validIn = itemPtr->setItemPrice(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;                    
                     } else if(input == "3") {
-                                            cout << "Enter the new product name: ";
-                                            getline(cin, input);
-                                            validIn = items[i]->setItemName(input);
-                                            while(!validIn) {
-                                                cout << "That name was too long, max length is " << items[i]->getMaxNameLength() << " characters long" << endl
-                                                    << "Enter a new name: ";
+                                             do {
+                                                cout << "Enter 'exit' to quit. The name can be anything, the shorter the better." << endl;
+                                                cout << "Enter the new item namefor item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
-                                                validIn = items[i]->setItemName(input);
-                                            }
+                                                validIn = itemPtr->setItemName(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
                     } else if (input == "4") {
-                                            cout << "Enter the new item code: ";
-                                            getline(cin, input);
-                                            validIn = items[i]->setItemCode(input);
-                                            while(!validIn) {
-                                                cout << "That code couldn't be converted to an integer" << endl
-                                                    << "Enter a new code: ";
+                                             do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Enter new code for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
-                                                validIn = items[i]->setItemName(input);
-                                            }
+                                                validIn = itemPtr->increaseCount(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
                     } else if(input == "5") {
                                         //More RTTI to check if the item has an expiration before trying to change it.
-                                            GMItem *gm = items[i];
-                                            ParishableItem *pa = dynamic_cast<ParishableItem*>(gm);
-                                            if(pa != NULL) {
-                                                cout << "Enter the new minimum age: ";
+                                        ExpiringItem * ex = dynamic_cast<ExpiringItem*>(itemPtr);
+                                        if(ex != NULL) {
+                                             do {
+                                                cout << "Enter 'exit' to quit. Warning should be 20 characters or shorter and on one line." << endl;
+                                                cout << "Enter the new warning for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
-                                                validIn = pa->setExpirationDate(input);
-                                                while(!validIn) {
-                                                    cout << "That expiration date was too long. The max expiration date length is " << pa->getMaxDateLength() << " characters long." << endl
-                                                        << "Enter the new minimum age or 0 to exit this command: ";
-                                                    getline(cin, input);
-                                                    validIn = pa->setItemName(input);
+                                                validIn = ex->setWarning(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
                                                 }
-                                            } else {
-                                                cout << "This item does not have an expiration date. Delete it and recreate it if it needs one, or use a physical label." << endl;
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
+                                        } else {
+                                            cout << "This item doesn't have a warning. Warnings must be 20 characters or shorer." << endl
+                                                 << "Enter 'add' to add one, or anything else to back out: ";
+                                            getline(cin, input);
+                                            if(input == "add") {
+                                                do {
+                                                    cout << "Enter the new minimum age: ";
+                                                    getline(cin, input);
+                                                    ExpiringItem * newEx = new ExpiringItem;
+                                                    bool testr = newEx->setWarning(input);
+                                                    if(testr) {
+                                                        newEx = new ExpiringItem(input, itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
+                                                        inventory[i] = newEx;
+                                                        validIn = true;
+                                                    } else {
+                                                        cout << "Invalid input: " << input << endl;
+                                                    }
+                                                } while (!validIn && input != "exit");
                                             }
+                                        }
                     } else if(input == "6") {
                                         //More RTTI to check if the item has an expiration before trying to change it.
-                                            GMItem *gm = items[i];
-                                            AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
-                                            if(ar != NULL) {
-                                                cout << "Enter the new minimum age: ";
+                                            AgeRestrictedItem * ar = dynamic_cast<AgeRestrictedItem*>(itemPtr);
+                                        if(ar != NULL) {
+                                             do {
+                                                cout << "Enter 'exit' to quit. Only integer values accepted." << endl;
+                                                cout << "Enter the new minmum age for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                                                 getline(cin, input);
                                                 validIn = ar->setMinAge(input);
-                                                while(!validIn) {
-                                                    cout << "Couldn't convert that to an int. " << endl
-                                                        << "Enter the new minimum age or 0 to exit this command: ";
-                                                    getline(cin, input);
-                                                    validIn = ar->setItemName(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
                                                 }
-                                            } else {
-                                                cout << "This item does not have a minimum age. Delete it and recreate it if it needs one. DO NOT RELY ON A PHYSICAL LABEL" << endl;
+                                            } while(!validIn && input != "exit");
+                                            validIn = false;
+                                        } else {
+                                            cout << "This item doesn't have a minimum age." << endl
+                                                 << "Enter 'add' to add one, or anything else to back out: ";
+                                            getline(cin, input);
+                                            if(input == "add") {
+                                                do {
+                                                    cout << "Enter the new minimum age: ";
+                                                    getline(cin, input);
+                                                    AgeRestrictedItem * newAr = new AgeRestrictedItem;
+                                                    bool testr = newAr->setMinAge(input);
+                                                    if(testr) {
+                                                        newAr = new AgeRestrictedItem(stoi(input), itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
+                                                        inventory[i] = newAr;
+                                                        validIn = true;
+                                                    } else {
+                                                        cout << "Invalid input: " << input << endl;
+                                                    }
+                                                } while (!validIn && input != "exit");
                                             }
-
+                                        }
                     }
                 }
             }
             found = false;
-            writeBack(ofs, items, numItems);
+            writeBack(ofs, inventory, numItems);
     } else if(input == "2") {
         cout << "a. A GMItem with no special characteristics." << endl
-             << "b. A ParishableItem with an expiration date to be stored." << endl
+             << "b. A ExpiringItem with an expiration date to be stored." << endl
              << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
         getline(cin, input);
         bool valid;
+        string code, name, price;
         if(input == "a") {
 
-                            GMItem * item;
-                            cout << "Enter the item code: ";
-                            getline(cin, input);
-                            valid = item->setItemCode(input);
-                            while(!valid) {
-                                cout << "Invalid code, couldn't be converted to an int" << endl;
-                                cout << "Enter new code: ";
-                                getline(cin, input);
-                                item ->setItemCode(input);
-                            }
-                            
-                            cout << "Enter the item name: ";
-                            getline(cin, input);
-                            valid = item->setItemName(input);
-                            while(!valid) {
-                                cout << "Invalid name, too long" << endl;
-                                cout << "Enter new name: ";
-                                getline(cin, input);
-                                item ->setItemName(input);
-                            }
 
-                            cout << "Enter the item price: ";
-                            getline(cin, input);
-                            valid = item->setItemPrice(input);
-                            while(!valid) {
-                                cout << "Invalid price, couldn't be converted to a double" << endl;
-                                cout << "Enter new price: ";
-                                getline(cin, input);
-                                item ->setItemPrice(input);
-                            }
 
-                            cout << "Enter the qty on hand: ";
-                            getline(cin, input);
-                            valid = item->setNumOnHand(input);
-                            while(!valid) {
-                                cout << "Invalid quantity, couldn't be converted to an int" << endl;
-                                cout << "Enter new quantity: ";
-                                getline(cin, input);
-                                item ->setNumOnHand(input);
-                            } 
-                            numItems++;
-                            items[numItems] = item;
 
         } else if (input == "b") {
 
@@ -590,3 +609,26 @@ void sortItemsByCode(GMItem * items[], const int& numItems) {
        items[j+1] = key; 
    } 
 }
+
+
+bool removeLastItem(GMItem * items[], int& numItems) {
+    if(numItems < 1) {
+        return false;
+    } else {
+        items[numItems] = nullptr;
+        numItems--;
+        return true;
+    }
+}
+
+
+bool addItemToList(GMItem * items[], int& numItems, GMItem * newItem) {
+    if(numItems == MAX_SIZE - 1) {
+        return false;
+    } else {
+        items[numItems + 1] = newItem;
+        numItems++;
+        return true;
+    }
+}
+
