@@ -16,45 +16,45 @@ using file_status_t = bool;
 using num_items_t = int;
 using total_price_t = double;
 
-const int MAX_SIZE = 500;
-
-const double TAX_RATE = 0.071; // Illinois 7.1%
-
-void testFileIOandPricing(); // Original main method for testing file reading and writing 
+const int TAX_RATE = 0.07; // IL 7.1%
+const int MAX_CART_SIZE = 500;  // I know from working at Wal-Mart that POS systems have built in caps around 400 or 500 so I figured I'd add one.
+// This program can really be broken into two programs: checkout() and performAdminFunctions()
+// performAdminFunctions() and related functions:
 void performAdminFunctions();
-void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax.
+    void promptChangeCount(GMItem * itemPtr);               // The interface for these functions is in seperate functions to slim down the body of performAdminFunctions()
+    void promptChangeName(GMItem * itemPtr);
+    void promptChangePrice(GMItem * itemPtr);
+    void promptChangeCode(GMItem * itemPtr);
+    void promptChangeWarning(GMItem * itemPtr);
+    void promptChangeMinAge(GMItem * itemPtr);
+    void promptAddGMItem(vector<GMItem*> items);
+    void promptAddExpiringItem(vector<GMItem*> items);
+    void promptAddAgeRestrictedItem(vector<GMItem*> items);
+    void promptDeleteItem(vector <GMItem*> items);
+    void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
+    void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 
+void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax.
+    void printItemsPOS(vector<GMItem*> items);          // To screen, displays only code, name, and price with periods for spacing, for use in checkout()
+    void printPOSPriceSection(vector<GMItem*> items);   // print subtotal, taxes, and total, for use in checkout()
+    void printPOSHeader();  
+    total_price_t calculateTax(const double& subTotal);
+    total_price_t calculateTotal(double& subTotal);
 // FIX: writeItems needs to be updated to print the different types of items in distinct sections.
 // FIX: add something to either verify that item numbers are uniqe, or present user with all of the items with that code and go from there.
-void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file
-void writeBack(ofstream& ofs, vector<GMItem*> items);
 
-// Functions created to increase readability in performAdminFunctions()
-void changeCount(GMItem * itemPtr);
-void changeName(GMItem * itemPtr);
-void changePrice(GMItem * itemPtr);
-void changeCode(GMItem * itemPtr);
-void changeWarning(GMItem * itemPtr);
-void changeMinAge(GMItem * itemPtr);
+// Testing file reading and writing
+void testFileIOandPricing();
 
-void printItems(vector<GMItem*> items);                // To screen, displays only code, name, and price with periods for spacing
-void printAdminInfo(vector<GMItem*> items); // outputs list with all special information
-void printAdminSep() { cout << "----------|------------|---------------------|-----------|--------|--------------" << endl; };
-void printPOSPriceSection(vector<GMItem*> items);// print subtotal, taxes, and total
-void printPOSHeader(); // print the header: CODE    NAME   .... and so on
-
+// Utilities / Testing:
 void sortItemsByName(vector<GMItem*> items);
 void sortItemsByCode(vector<GMItem*> items);
-
-bool addItemToList(vector<GMItem*> items, GMItem * newItem);
-
-total_price_t calculateTax(const double& subTotal);
-total_price_t calculateTotal(double& subTotal);
-
 void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); 
 file_status_t openFileIn(ifstream& ifs, const string& fileName);
 file_status_t openFileOut(ofstream& ofs, const string& fileName);
+void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file
 
+// Default file names to make testing quicker.
 string inFileName = "items.txt";
 string outFileName = "itemsOut.csv";
 
@@ -65,7 +65,215 @@ int main() {
     return 0;
 }// end main()
 
+void performAdminFunctions() {
+    string input;
+    string thisInfileName = inFileName;
+    string thisOutFileName = "newlog.txt";
+    bool found = false;
+    ifstream ifs;
+    ofstream ofs;
+    vector<GMItem*> inventory;
 
+    // cout << "Enter the inventory list file name with extension: ";
+    // getline(cin, thisInfileName);
+
+    cout << "Opening file " << thisInfileName << "..." << endl;
+    file_status_t fInStatus = openFileIn(ifs, thisInfileName);
+    if(!fInStatus) {
+        cout << "Error opening file \"" << thisInfileName << "\"" << endl;
+        exit(1);
+    } else {
+        cout << "File " << thisInfileName << " opened succesfully" << endl;
+    }
+
+    loadItemsFromFile(ifs, inventory); 
+    do {
+        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the output be controlled by iomanip
+        cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
+        printAdminInfo(inventory);
+        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
+        cout << "1. Manage current inventory" << endl
+             << "2. Add item" << endl
+             << "3. Delete an item" << endl
+             << "and at any time, you can enter 'exit' to quit the program." << endl
+             << "Enter your choice: ";
+        getline(cin, input);
+        if(input == "1") {
+                cout << "Enter index of the number of the item that you want to edit: ";
+                getline(cin, input);
+
+                if(input == "exit") {
+                    return;
+                } else {
+                    GMItem * itemPtr = inventory[stoi(input)];
+                    found = true;
+                    cout << endl 
+                        << "Item found: " << itemPtr->getItemName() << endl << endl
+                        << "1. Change number on hand" << endl
+                        << "2. Change price" << endl
+                        << "3. Change item name" << endl
+                        << "4. Change item code" << endl
+                        << "5. Change item warning prompt" << endl
+                        << "6. Change item minimum age" << endl
+                        << "Enter the number of the action you want to perform: ";    
+                    getline(cin,input);
+
+                    if(input == "1") {
+                        promptChangeCount(itemPtr);
+                    } else if(input == "2") {
+                        changePrice(itemPtr);            
+                    } else if(input == "3") {
+                        promptChangeName(itemPtr);         // These are all defined below to slim down paF()
+                    } else if (input == "4") {
+                        promptC(itemPtr);
+                    } else if(input == "5") {
+                        promptChangeWarning(itemPtr);
+                    } else if(input == "6") {
+                        promptChangeMinAge(itemPtr);
+                    } else if (input == "exit") {
+                        return;
+                    }
+                        
+                    
+                }
+                found = false;
+        } else if(input == "2") {
+            cout << "All options unimplemented \na. A GMItem with no special characteristics." << endl
+                << "b. A ExpiringItem with an expiration date to be stored." << endl
+                << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
+            getline(cin, input);
+            if(input == "a") {
+                promptAddGMItem(inventory);
+            } else if (input == "b") {
+                promptAddExpiringItem(inventory);                    
+            } else if(input == "c") {
+                promptAddAgeRestrictedItem(inventory);  
+            }
+        } else if(input == "3") {
+            promptDeleteItem(inventory);
+        }
+    
+    } while(input != "exit");
+
+    cout << "Exiting..." << endl;
+    file_status_t fOutStatus = openFileOut(ofs, thisOutFileName);
+
+
+    // cout << "Enter the name of your outfile: ";
+    // getline(cin, thisOutFileName);
+
+    if(!fOutStatus) {
+        cout << "Error opening file \"" << thisOutFileName << "\"" << endl;
+        exit(1);
+    }
+
+    writeBack(ofs, inventory);
+    ofs.close();
+}   
+
+void checkout() {
+    ostringstream oss;
+    string codeString;
+    int code = 0;
+    int numItemsInCart = 0;
+    double subTotal = 0;
+    bool foundItem = false;
+    vector<GMItem*> inventory;
+    vector<GMItem*> cart;
+    ifstream ifs;
+    ofstream ofs;
+
+    file_status_t fInStatus = openFileIn(ifs, inFileName);
+    if(!fInStatus) {
+        cout << "Error opening file \"" << inFileName << "\"" << endl;
+        exit(1);
+    }
+    loadItemsFromFile(ifs, inventory); 
+
+    do { 
+        foundItem = false;
+        if(numItemsInCart == MAX_CART_SIZE) {
+            cout << endl << "Maximum cart sized reached. Totaling the order..." << endl << endl;
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+            cout << endl;
+            return;
+        }                        
+
+        cout << "Enter product code (This code should be only numbers.) (Type \"total\" when done entering items): ";
+        getline(cin, codeString);
+        if(codeString == "total") {
+            cout << endl;
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+                    for(int i = 0; i < numItemsInCart; i++) {
+                        cart.at(i)->decreaseCount();
+                    }
+            cout << endl;
+        } else if (codeString == "undo") {
+                if(cart.size() < 1) {
+                    cout << endl << "The list is already empty!" << endl;
+                } else {
+                    cart.pop_back();
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+                }
+
+        } else {
+            try {
+                code = stoi(codeString);
+                for(int i = 0; i < inventory.size(); i++) {
+                        
+                        // FIX: This code does not work
+                        // if (foundItem == false && i == numItems) { 
+                        //     cout << "No item with that code was found in the inventory file." << endl;
+                        // } 
+
+                    if(code == inventory.at(i)->getItemCode()) {
+                        cart.push_back(inventory.at(i));
+
+                                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
+
+                        GMItem *gm = inventory.at(i);
+                        AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
+                        if(ar != NULL) {
+                        string valid;
+                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
+                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
+                        getline(cin, valid);
+                            if(valid == "y") {
+                                oss << cart.back()->toStringPOS();
+                                subTotal += cart.back()->getItemPrice();
+                                numItemsInCart++;
+                                foundItem = true;
+                            } else {
+                                cout << "Customer cannot purchase this item." << endl;
+                            }
+                        } else {
+                            oss << cart.back()->toStringPOS();
+                            subTotal += cart.back()->getItemPrice();
+                            numItemsInCart++;
+                            foundItem = true;
+                        }
+                    }                     
+                }
+            } catch(exception e) {
+                cout << "Invalid Code Entered!" << endl;
+            }
+        }
+
+        cout << endl;
+                printPOSHeader();
+                printItemsPOS(cart);
+            cout << endl;
+                printPOSPriceSection(cart);
+        cout << endl;
+        
+    } while (codeString != "total" && numItemsInCart < MAX_CART_SIZE);
+}   
 // Take the array of items and go through it adding all of the prices up and return it as a double
 total_price_t calculateSubtotal(vector<GMItem*> items){
     total_price_t total = 0;
@@ -159,11 +367,11 @@ void writeBack(ofstream& ofs, vector<GMItem*> items) {
 
 
 // Take a provided array of items and print it to the screen using the toStringPOS() method
-void printItems(vector<GMItem*> items) {
+void printItemsPOS(vector<GMItem*> items) {
     for(int i = 0; i < items.size(); i++) {
         cout  << items.at(i)->toStringPOS() << endl;
     }
-}// end printItems()
+}// end printItemsPOS()
 
 
 // use provided ifstream to open provided filename to read information from
@@ -182,109 +390,6 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
 
 // a pos system for selling inventory. 
 //FIX: items are currently removed from inventory as they are added to the list, and not as they are actually sold
-void checkout() {
-    ostringstream oss;
-    string codeString;
-    int code = 0;
-    int numItemsInCart = 0;
-    double subTotal = 0;
-    bool foundItem = false;
-    vector<GMItem*> inventory;
-    vector<GMItem*> cart;
-    ifstream ifs;
-    ofstream ofs;
-
-    file_status_t fInStatus = openFileIn(ifs, inFileName);
-    if(!fInStatus) {
-        cout << "Error opening file \"" << inFileName << "\"" << endl;
-        exit(1);
-    }
-    loadItemsFromFile(ifs, inventory); 
-
-    do { 
-        foundItem = false;
-        if(numItemsInCart == MAX_SIZE) {
-            cout << endl << "Maximum cart sized reached. Totaling the order..." << endl << endl;
-                    printPOSHeader();
-                    printItems(cart);
-                    printPOSPriceSection(cart);
-            cout << endl;
-            return;
-        }                        
-
-        cout << "Enter product code (This code should be only numbers.) (Type \"total\" when done entering items): ";
-        getline(cin, codeString);
-        if(codeString == "total") {
-            cout << endl;
-                    printPOSHeader();
-                    printItems(cart);
-                    printPOSPriceSection(cart);
-                    for(int i = 0; i < numItemsInCart; i++) {
-                        cart.at(i)->decreaseCount();
-                    }
-            cout << endl;
-        } else if (codeString == "undo") {
-                if(cart.size() < 1) {
-                    cout << endl << "The list is already empty!" << endl;
-                } else {
-                    cart.pop_back();
-                    printPOSHeader();
-                    printItems(cart);
-                    printPOSPriceSection(cart);
-                }
-
-        } else {
-            try {
-                code = stoi(codeString);
-                for(int i = 0; i < inventory.size(); i++) {
-                        
-                        // FIX: This code does not work
-                        // if (foundItem == false && i == numItems) { 
-                        //     cout << "No item with that code was found in the inventory file." << endl;
-                        // } 
-
-                    if(code == inventory.at(i)->getItemCode()) {
-                        cart.push_back(inventory.at(i));
-
-                                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
-
-                        GMItem *gm = inventory.at(i);
-                        AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
-                        if(ar != NULL) {
-                        string valid;
-                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
-                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
-                        getline(cin, valid);
-                            if(valid == "y") {
-                                oss << cart.back()->toStringPOS();
-                                subTotal += cart.back()->getItemPrice();
-                                numItemsInCart++;
-                                foundItem = true;
-                            } else {
-                                cout << "Customer cannot purchase this item." << endl;
-                            }
-                        } else {
-                            oss << cart.back()->toStringPOS();
-                            subTotal += cart.back()->getItemPrice();
-                            numItemsInCart++;
-                            foundItem = true;
-                        }
-                    }                     
-                }
-            } catch(exception e) {
-                cout << "Invalid Code Entered!" << endl;
-            }
-        }
-
-        cout << endl;
-                printPOSHeader();
-                printItems(cart);
-            cout << endl;
-                printPOSPriceSection(cart);
-        cout << endl;
-        
-    } while (codeString != "total" && numItemsInCart < MAX_SIZE);
-}   
 
 
 // print the formatted POS header
@@ -319,7 +424,7 @@ void testFileIOandPricing() {
     ofs << "Code,Name,Price,On Hand,Expiration" << endl;
     writeItems(ofs, items);
     sortItemsByName(items);
-    printItems(items);
+    printItemsPOS(items);
     printPOSPriceSection(items);   
 }
 
@@ -340,191 +445,10 @@ void printPOSPriceSection(vector<GMItem*> items) {
 
 void printAdminInfo(vector<GMItem*> items) {
      for(int i = 0; i < items.size(); i++) {
-        printAdminSep;
+        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
         cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
     }
 }
-
-
-
-void performAdminFunctions() {
-    string input;
-    string thisInfileName = inFileName;
-    string thisOutFileName = "newlog.txt";
-    bool found = false;
-    ifstream ifs;
-    ofstream ofs;
-    vector<GMItem*> inventory;
-
-    // cout << "Enter the inventory list file name with extension: ";
-    // getline(cin, thisInfileName);
-
-    cout << "Opening file " << thisInfileName << "..." << endl;
-    file_status_t fInStatus = openFileIn(ifs, thisInfileName);
-    if(!fInStatus) {
-        cout << "Error opening file \"" << thisInfileName << "\"" << endl;
-        exit(1);
-    } else {
-        cout << "File " << thisInfileName << " opened succesfully" << endl;
-    }
-
-    loadItemsFromFile(ifs, inventory); 
-    do {
-        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the output be controlled by iomanip
-        cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
-        printAdminInfo(inventory);
-        printAdminSep();
-
-        cout << "1. Manage current inventory" << endl
-             << "2. Add item" << endl
-             << "3. Delete an item" << endl
-             << "and at any time, you can enter 'exit' to quit the program." << endl
-             << "Enter your choice: ";
-        getline(cin, input);
-        if(input == "1") {
-                cout << "Enter index of the number of the item that you want to edit: ";
-                getline(cin, input);
-
-                if(input == "exit") {
-                    return;
-                }
-
-                for(int i = 0; i < inventory.size() && found == false; i++) {
-                    if(inventory[i]->getItemCode() == stoi(input)) {
-                    GMItem * itemPtr = inventory[i];
-                        found = true;
-                        cout << endl 
-                            << "Item found: " << itemPtr->getItemName() << endl << endl
-                            << "1. Change number on hand" << endl
-                            << "2. Change price" << endl
-                            << "3. Change item name" << endl
-                            << "4. Change item code" << endl
-                            << "5. Change item warning prompt" << endl
-                            << "6. Change item minimum age" << endl
-                            << "Enter the number of the action you want to perform: ";    
-                        getline(cin,input);
-
-                        if(input == "1") {
-                            changeCount(itemPtr);
-                        } else if(input == "2") {
-                            changePrice(itemPtr);            
-                        } else if(input == "3") {
-                            changeName(itemPtr);         // These are all defined below to slim down paF()
-                        } else if (input == "4") {
-                            changeCode(itemPtr);
-                        } else if(input == "5") {
-                            changeWarning(itemPtr);
-                        } else if(input == "6") {
-                            changeMinAge(itemPtr);
-                        }
-                    }
-                }
-                found = false;
-        } else if(input == "2") {
-            cout << "All options unimplemented \na. A GMItem with no special characteristics." << endl
-                << "b. A ExpiringItem with an expiration date to be stored." << endl
-                << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
-            getline(cin, input);
-            bool valid;
-            string code, name, price, numOnHand;
-            if(input == "a") {
-                do {
-                    cout << "Enter item information as such <code,name,numberOnHand,price>";
-                    getline(cin, code, ',');
-                    getline(cin, name, ',');
-                    getline(cin, numOnHand, ',');
-                    getline(cin, price);
-                    try {
-                        inventory.push_back(new GMItem(name, stod(price), stoi(numOnHand), stoi(code)));
-                        valid = true;
-                    } catch (invalid_argument e) {
-                        cout << "One or more arguments were invalid. Try again." << endl;
-                        valid = false;
-                    }
-                } while(!valid);
-            } else if (input == "b") {
-                string code, name, price, numOnHand, warning;
-                do {
-                    cout << "Enter item information as follows <code,name,numberOnHand,price,20 char warning msg>" << endl
-                         << "Enter item information: ";
-                    getline(cin, code, ',');
-                    getline(cin, name, ',');
-                    getline(cin, numOnHand, ',');
-                    getline(cin, price, ',');
-                    getline(cin, warning);
-                    try {
-                        inventory.push_back(new ExpiringItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
-                        valid = true;
-                    } catch (exception e) {
-                        cout << "One or more arguments were invalid. Try again." << endl;
-                        valid = false;
-                    }
-                } while(!valid);                               
-            } else if(input == "c") {
-                string code, name, price, numOnHand, minAge;
-                do {
-                    cout << "Enter item information as follows <code,name,numberOnHand,price,minAge>"<< endl
-                         << "Enter item information: ";
-                    getline(cin, code, ',');
-                    getline(cin, name, ',');
-                    getline(cin, numOnHand, ',');
-                    getline(cin, price, ',');
-                    getline(cin, minAge);
-                    try {
-                        inventory.push_back(new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code)));
-                        valid = true;
-                    } catch (exception e) {
-                        cout << "One or more arguments were invalid. Try again." << endl;
-                        valid = false;
-                    }
-                } while(!valid);    
-            }
-        } else if(input == "3") {
-            string input;
-            bool valid = false;
-            do {
-                cout << "Enter the code of them item you want to delete: ";
-                getline(cin, input);
-                try {
-                    int code = stoi(input);
-                    for(int i = 0; i < inventory.size(); i++) {
-                        if(code == inventory.at(i)->getItemCode()) {
-                            cout << "Are you sure you want to delete this item from the inventory system?:" << endl
-                                 << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-                                 << inventory.at(i)->toStringAdmin() << endl
-                                 << "Enter 'y' or 'n':";
-                            getline(cin, input);
-                            if(input == "y") {
-                                inventory.erase(inventory.begin() + i);
-                            } else if (input == "n") {
-                                return;
-                            }
-                        }
-                    }
-                    valid = true;
-                } catch (invalid_argument e) {
-                    cout << "Invalid code entered: " << input;
-                }
-            } while (!valid);
-        }
-    
-    } while(input != "exit");
-
-    cout << "Exiting..." << endl;
-    file_status_t fOutStatus = openFileOut(ofs, thisOutFileName);
-
-
-    // cout << "Enter the name of your outfile: ";
-    // getline(cin, thisOutFileName);
-
-    if(!fOutStatus) {
-        cout << "Error opening file \"" << thisOutFileName << "\"" << endl;
-        exit(1);
-    }
-
-    writeBack(ofs, inventory);
-    ofs.close();
-}   
 
 
 // Insertion sort used 
@@ -560,7 +484,7 @@ void sortItemsByCode(vector<GMItem*> items) {
 
 
 bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
-    if(items.size() == MAX_SIZE) {
+    if(items.size() == MAX_CART_SIZE) {
         return false;
     } else {
         items.push_back(newItem);
@@ -570,7 +494,7 @@ bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
 
 
 
-void changeCount(GMItem * itemPtr) {
+void promptChangeCount(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     cout << endl
@@ -634,7 +558,7 @@ void changePrice(GMItem * itemPtr) {
 
 
 
-void changeName(GMItem * itemPtr) {
+void promptChangeName(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     do {
@@ -651,7 +575,7 @@ void changeName(GMItem * itemPtr) {
 
 
 
-void changeCode(GMItem * itemPtr) {
+void promptC(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     do {
@@ -668,7 +592,7 @@ void changeCode(GMItem * itemPtr) {
 
 
 
-void changeWarning(GMItem * itemPtr) {
+void promptChangeWarning(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     //More RTTI to check if the item has an expiration before trying to change it.
@@ -708,7 +632,7 @@ void changeWarning(GMItem * itemPtr) {
 
 
 
-void changeMinAge(GMItem * itemPtr) {
+void promptChangeMinAge(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     //More RTTI to check if the item has an expiration before trying to change it.
@@ -744,4 +668,98 @@ void changeMinAge(GMItem * itemPtr) {
             } while (!validIn && input != "exit");
         }
     }
+}
+
+
+
+void promptAddGMItem(vector<GMItem*> items) {
+    bool valid;
+    string code, name, price, numOnHand;
+    do {
+        cout << "Enter item information as such <code,name,numberOnHand,price>";
+        getline(cin, code, ',');
+        getline(cin, name, ',');
+        getline(cin, numOnHand, ',');
+        getline(cin, price);
+        try {
+            items.push_back(new GMItem(name, stod(price), stoi(numOnHand), stoi(code)));
+            valid = true;
+        } catch (invalid_argument e) {
+            cout << "One or more arguments were invalid. Try again." << endl;
+            valid = false;
+        }
+    } while(!valid);    
+}
+
+
+
+void promptAddExpiringItem(vector<GMItem*> items) {
+    bool valid;
+    string code, name, price, numOnHand, warning;
+    do {
+        cout << "Enter item information as follows <code,name,numberOnHand,price,20 char warning msg>" << endl
+             << "Enter item information: ";
+        getline(cin, code, ',');
+        getline(cin, name, ',');
+        getline(cin, numOnHand, ',');
+        getline(cin, price, ',');
+        getline(cin, warning);
+        try {
+            items.push_back(new ExpiringItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
+            valid = true;
+        } catch (exception e) {
+            cout << "One or more arguments were invalid. Try again." << endl;
+            valid = false;
+        }
+    } while(!valid);           
+}
+
+
+
+void promptAddAgeRestrictedItem(vector<GMItem*> items) {
+    bool valid;
+    string code, name, price, numOnHand, minAge;
+    do {
+        cout << "Enter item information as follows <code,name,numberOnHand,price,minAge>"<< endl
+             << "Enter item information: ";
+        getline(cin, code, ',');
+        getline(cin, name, ',');
+        getline(cin, numOnHand, ',');
+        getline(cin, price, ',');
+        getline(cin, minAge);
+        try {
+            items.push_back(new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code)));
+            valid = true;
+        } catch (exception e) {
+            cout << "One or more arguments were invalid. Try again." << endl;
+            valid = false;
+        }
+    } while(!valid);  
+}
+
+
+
+void promptDeleteItem(vector<GMItem*> items) {
+    string input;
+    bool valid = false;
+    do {
+        cout << "Enter the index of them item you want to delete: ";
+        getline(cin, input);
+        try {
+            int index = stoi(input);
+            cout << "Are you sure you want to delete this item from the inventory system?:" << endl
+                 << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
+                 << items.at(index)->toStringAdmin() << endl
+                 << "Enter 'y' or 'n':";
+            getline(cin, input);
+            if(input == "y") {
+                items.erase(items.begin() + index);
+            } else if (input == "n") {
+                return;
+            }       
+            valid = true;
+        } catch (invalid_argument e) {
+             cout << "Invalid code entered: " << input;
+        }
+    } while (!valid);
 }
