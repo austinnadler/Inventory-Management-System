@@ -99,7 +99,7 @@ string GMItem::toStringPOS() const {
 
 string GMItem::toStringAdmin() const {
     ostringstream oss;
-    oss << setw(10) << left << code << "| " << setw(20) << name  << right << "|" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |";
+    oss << setw(10) << left << code << " | " << setw(20) << name  << right << "|" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |";
     return oss.str();
 }//end toStringAdmin()
 

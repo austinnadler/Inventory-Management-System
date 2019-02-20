@@ -22,9 +22,10 @@ const double TAX_RATE = 0.071; // Illinois 7.1%
 
 void testFileIOandPricing(); // Original main method for testing file reading and writing 
 void performAdminFunctions();
-void checkout(); // create a new array of pointers and put the items that you want to buy into it. Program totals the purchase and adds tax
-// ADD: sorting by name and number when printing or writing items
-// FIX: writeItems needs to be updated to print the different types of items in their own tables to seperate the special fields
+void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax.
+
+// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
+// FIX: add something to either verify that item numbers are uniqe, or present user with all of the items with that code and go from there.
 void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file
 void writeBack(ofstream& ofs, vector<GMItem*> items);
 
@@ -38,6 +39,7 @@ void changeMinAge(GMItem * itemPtr);
 
 void printItems(vector<GMItem*> items);                // To screen, displays only code, name, and price with periods for spacing
 void printAdminInfo(vector<GMItem*> items); // outputs list with all special information
+void printAdminSep() { cout << "----------|------------|---------------------|-----------|--------|--------------" << endl; };
 void printPOSPriceSection(vector<GMItem*> items);// print subtotal, taxes, and total
 void printPOSHeader(); // print the header: CODE    NAME   .... and so on
 
@@ -96,7 +98,6 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
     string expirationDate;
     string code;
     string minAge;
-    num_items_t numItems = 0;
 
     using type_id_t = string;
     type_id_t ageRestricted = "ar";
@@ -288,7 +289,7 @@ void checkout() {
 
 // print the formatted POS header
 void printPOSHeader() {
-    cout << left << "CODE\t" << "NAME" <<  right << setw(26) << "PRICE" << endl;
+    cout << left << "INDEX\t" << "CODE\t" << "NAME" <<  right << setw(26) << "PRICE" << endl;
 }
 
 
@@ -339,8 +340,8 @@ void printPOSPriceSection(vector<GMItem*> items) {
 
 void printAdminInfo(vector<GMItem*> items) {
      for(int i = 0; i < items.size(); i++) {
-        cout << "----------|---------------------|-----------|--------|-------------------------" << endl;
-        cout  << items.at(i)->toStringAdmin() << endl;
+        printAdminSep;
+        cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
     }
 }
 
@@ -351,7 +352,6 @@ void performAdminFunctions() {
     string thisInfileName = inFileName;
     string thisOutFileName = "newlog.txt";
     bool found = false;
-    bool validIn;
     ifstream ifs;
     ofstream ofs;
     vector<GMItem*> inventory;
@@ -368,34 +368,27 @@ void performAdminFunctions() {
         cout << "File " << thisInfileName << " opened succesfully" << endl;
     }
 
-    // cout << "Enter the name of your outfile: ";
-    // getline(cin, thisOutFileName);
-
-    file_status_t fOutStatus = openFileOut(ofs, thisOutFileName);
-    if(!fOutStatus) {
-        cout << "Error opening file \"" << thisOutFileName << "\"" << endl;
-        exit(1);
-    }
-
     loadItemsFromFile(ifs, inventory); 
     do {
-        cout << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
+        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the output be controlled by iomanip
+        cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
-        cout << "----------|---------------------|-----------|--------|-------------------------" << endl;
+        printAdminSep();
 
         cout << "1. Manage current inventory" << endl
-            << "2. Add item" << endl
-            << "3. Delete an item" << endl
-            << "Enter your choice: ";
+             << "2. Add item" << endl
+             << "3. Delete an item" << endl
+             << "and at any time, you can enter 'exit' to quit the program." << endl
+             << "Enter your choice: ";
         getline(cin, input);
         if(input == "1") {
-                cout << "Enter the number of the item you want to edit. Enter 'exit' to quit." << endl;
+                cout << "Enter index of the number of the item that you want to edit: ";
+                getline(cin, input);
 
                 if(input == "exit") {
                     return;
                 }
 
-                getline(cin, input);
                 for(int i = 0; i < inventory.size() && found == false; i++) {
                     if(inventory[i]->getItemCode() == stoi(input)) {
                     GMItem * itemPtr = inventory[i];
@@ -412,9 +405,9 @@ void performAdminFunctions() {
                         getline(cin,input);
 
                         if(input == "1") {
-                            changeCount(itemPtr); 
+                            changeCount(itemPtr);
                         } else if(input == "2") {
-                            changePrice(itemPtr);                  
+                            changePrice(itemPtr);            
                         } else if(input == "3") {
                             changeName(itemPtr);         // These are all defined below to slim down paF()
                         } else if (input == "4") {
@@ -427,7 +420,6 @@ void performAdminFunctions() {
                     }
                 }
                 found = false;
-                writeBack(ofs, inventory);
         } else if(input == "2") {
             cout << "All options unimplemented \na. A GMItem with no special characteristics." << endl
                 << "b. A ExpiringItem with an expiration date to be stored." << endl
@@ -453,7 +445,8 @@ void performAdminFunctions() {
             } else if (input == "b") {
                 string code, name, price, numOnHand, warning;
                 do {
-                    cout << "Enter item information as such <code,name,numberOnHand,price,20 char warning msg>";
+                    cout << "Enter item information as follows <code,name,numberOnHand,price,20 char warning msg>" << endl
+                         << "Enter item information: ";
                     getline(cin, code, ',');
                     getline(cin, name, ',');
                     getline(cin, numOnHand, ',');
@@ -470,7 +463,8 @@ void performAdminFunctions() {
             } else if(input == "c") {
                 string code, name, price, numOnHand, minAge;
                 do {
-                    cout << "Enter item information as such <code,name,numberOnHand,price,minAge>";
+                    cout << "Enter item information as follows <code,name,numberOnHand,price,minAge>"<< endl
+                         << "Enter item information: ";
                     getline(cin, code, ',');
                     getline(cin, name, ',');
                     getline(cin, numOnHand, ',');
@@ -484,8 +478,6 @@ void performAdminFunctions() {
                         valid = false;
                     }
                 } while(!valid);    
-                                
-
             }
         } else if(input == "3") {
             string input;
@@ -515,8 +507,23 @@ void performAdminFunctions() {
                 }
             } while (!valid);
         }
+    
     } while(input != "exit");
-        cout << "Exiting..." << endl;
+
+    cout << "Exiting..." << endl;
+    file_status_t fOutStatus = openFileOut(ofs, thisOutFileName);
+
+
+    // cout << "Enter the name of your outfile: ";
+    // getline(cin, thisOutFileName);
+
+    if(!fOutStatus) {
+        cout << "Error opening file \"" << thisOutFileName << "\"" << endl;
+        exit(1);
+    }
+
+    writeBack(ofs, inventory);
+    ofs.close();
 }   
 
 
