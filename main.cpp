@@ -21,7 +21,7 @@ const int MAX_CART_SIZE = 500;  // I know from working at Wal-Mart that POS syst
 // This program can really be broken into two programs: checkout() and performAdminFunctions()
 // performAdminFunctions() and related functions:
 void performAdminFunctions();
-    void promptChangeCount(GMItem * itemPtr);               // The interface for these functions is in seperate functions to slim down the body of performAdminFunctions()
+    void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is in seperate functions to slim down the body of performAdminFunctions()
     void promptChangeName(GMItem * itemPtr);
     void promptChangePrice(GMItem * itemPtr);
     void promptChangeCode(GMItem * itemPtr);
@@ -34,7 +34,7 @@ void performAdminFunctions();
     void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
     void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 
-void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax.
+void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax. Uses vector functions for deletion and adding.
     void printItemsPOS(vector<GMItem*> items);          // To screen, displays only code, name, and price with periods for spacing, for use in checkout()
     void printPOSPriceSection(vector<GMItem*> items);   // print subtotal, taxes, and total, for use in checkout()
     void printPOSHeader();  
@@ -75,7 +75,7 @@ int main() {
             performAdminFunctions();
             validCmd = true;
         } else if(cmd == "exit") {
-            validCmd = true; // redundant and useless but for readability
+            validCmd = true; 
         }
     } while (!validCmd);
 
@@ -117,54 +117,60 @@ void performAdminFunctions() {
              << "Enter your choice: ";
         getline(cin, input);
         if(input == "1") {
+            do {
                 cout << "Enter index of the number of the item that you want to edit: ";
                 getline(cin, input);
 
                 if(input == "exit") {
                     return;
                 } else {
-                    GMItem * itemPtr = inventory[stoi(input)];
-                    found = true;
-                    cout << endl 
-                        << "Item found: " << itemPtr->getItemName() << endl << endl
-                        << "1. Change number on hand" << endl
-                        << "2. Change price" << endl
-                        << "3. Change item name" << endl
-                        << "4. Change item code" << endl
-                        << "5. Change item warning prompt" << endl
-                        << "6. Change item minimum age" << endl
-                        << "Enter the number of the action you want to perform: ";    
-                    getline(cin,input);
+                    try {
+                        GMItem * itemPtr = inventory[stoi(input)];
+                        found = true;
+                        cout << endl 
+                            << "Item found: " << itemPtr->getItemName() << endl << endl
+                            << "1. Change number on hand" << endl
+                            << "2. Change price" << endl
+                            << "3. Change item name" << endl
+                            << "4. Change item code" << endl
+                            << "5. Change item warning prompt" << endl
+                            << "6. Change item minimum age" << endl
+                            << "Enter the number of the action you want to perform: ";    
+                        getline(cin,input);
 
-                    if(input == "1") {
-                        promptChangeCount(itemPtr);
-                    } else if(input == "2") {
-                        promptChangePrice(itemPtr);            
-                    } else if(input == "3") {
-                        promptChangeName(itemPtr);         // These are all defined below to slim down paF()
-                    } else if (input == "4") {
-                        promptChangeCode(itemPtr);
-                    } else if(input == "5") {
-                        promptChangeWarning(itemPtr);
-                    } else if(input == "6") {
-                        promptChangeMinAge(itemPtr);
-                    } else if (input == "exit") {
-                        return;
+                        if(input == "1") {
+                            promptChangeCount(itemPtr);
+                        } else if(input == "2") {
+                            promptChangePrice(itemPtr);            
+                        } else if(input == "3") {
+                            promptChangeName(itemPtr);         // These are all defined below to slim down paF()
+                        } else if (input == "4") {
+                            promptChangeCode(itemPtr);
+                        } else if(input == "5") {
+                            promptChangeWarning(itemPtr);
+                        } else if(input == "6") {
+                            promptChangeMinAge(itemPtr);
+                        } else if (input == "exit") {
+                            return;
+                        }
+                    } catch (invalid_argument e) {
+                        cout << "Invalid input: " << input << endl;
                     }
                 }
                 found = false;
+            } while(input != "exit");
         } else if(input == "2") {
-            cout << "All options unimplemented \na. A GMItem with no special characteristics." << endl
-                << "b. A ExpiringItem with an expiration date to be stored." << endl
-                << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
-            getline(cin, input);
-            if(input == "a") {
-                promptAddGMItem(inventory);
-            } else if (input == "b") {
-                promptAddExpiringItem(inventory);                    
-            } else if(input == "c") {
-                promptAddAgeRestrictedItem(inventory);  
-            }
+                cout << "a. A GMItem with no special characteristics." << endl
+                    << "b. A ExpiringItem with an expiration date to be stored." << endl
+                    << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
+                getline(cin, input);
+                if(input == "a") {
+                    promptAddGMItem(inventory);
+                } else if (input == "b") {
+                    promptAddExpiringItem(inventory);                    
+                } else if(input == "c") {
+                    promptAddAgeRestrictedItem(inventory);  
+                }
         } else if(input == "3") {
             promptDeleteItem(inventory);
         }
@@ -196,7 +202,7 @@ void promptChangeCount(GMItem * itemPtr) {
          << "a. Add to the current count" << endl
          << "b. Subtract from the current count" << endl
          << "c. Enter a completely new count" << endl
-         << "Enter the number of the action you want to perform: ";
+         << "Enter the character of the action you want to perform: ";
     getline(cin, input);
     if(input == "a") {
         do {
@@ -369,17 +375,25 @@ void promptChangeMinAge(GMItem * itemPtr) {
 
 void promptAddGMItem(vector<GMItem*>& items) {
     bool valid;
-    string code, name, price, numOnHand;
+    string input, code, name, price, numOnHand;
     do {
         cout << "Enter item information as follows: " << endl;
         cout << "Enter the code: ";
-        getline(cin, code);
+        getline(cin, input);
+        code = input;
+        input = "";
         cout << "Enter the name: ";
-        getline(cin, name);
+        getline(cin, input);
+        name = input;
+        input = "";
         cout << "Enter the quantity on hand: ";
-        getline(cin, numOnHand);
+        getline(cin, input);
+        numOnHand = input;
+        input = "";
         cout << "Enter the price: ";
-        getline(cin, price);
+        getline(cin, input);
+        price = input;
+        input = "";
         try {
             items.push_back(new GMItem(name, stod(price), stoi(numOnHand), stoi(code)));
             valid = true;
@@ -387,24 +401,32 @@ void promptAddGMItem(vector<GMItem*>& items) {
             cout << "One or more arguments were invalid. Try again." << endl;
             valid = false;
         }
-    } while(!valid);    
+    } while(!valid && input != "exit");    
 }
 
 
 
 void promptAddExpiringItem(vector<GMItem*>& items) {
     bool valid;
-    string code, name, price, numOnHand, warning;
+    string input, code, name, price, numOnHand, warning;
     do {
         cout << "Enter item information as follows: " << endl;
         cout << "Enter the code: ";
-        getline(cin, code);
+        getline(cin, input);
+        code = input;
+        input = "";
         cout << "Enter the name: ";
-        getline(cin, name);
+        getline(cin, input);
+        name = input;
+        input = "";
         cout << "Enter the quantity on hand: ";
-        getline(cin, numOnHand);
+        getline(cin, input);
+        numOnHand = input;
+        input = "";
         cout << "Enter the price: ";
-        getline(cin, price);
+        getline(cin, input);
+        price = input;
+        input = "";
         cout << "Enter the 20 character maximum warning: ";
         getline(cin, warning);
         try {
@@ -414,26 +436,36 @@ void promptAddExpiringItem(vector<GMItem*>& items) {
             cout << "One or more arguments were invalid. Try again." << endl;
             valid = false;
         }
-    } while(!valid);           
+    } while(!valid && input != "exit");           
 }
 
 
 
 void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
     bool valid;
-    string code, name, price, numOnHand, minAge;
+    string input, code, name, price, numOnHand, minAge;
     do {
         cout << "Enter item information as follows: " << endl;
         cout << "Enter the code: ";
-        getline(cin, code);
+        getline(cin, input);
+        code = input;
+        input = "";
         cout << "Enter the name: ";
-        getline(cin, name);
+        getline(cin, input);
+        name = input;
+        input = "";
         cout << "Enter the quantity on hand: ";
-        getline(cin, numOnHand);
+        getline(cin, input);
+        numOnHand = input;
+        input = "";
         cout << "Enter the price: ";
-        getline(cin, price);
+        getline(cin, input);
+        price = input;
+        input = "";
         cout << "Enter the minimum age: ";
-        getline(cin, minAge);
+        getline(cin, input);
+        minAge = input;
+        input = "";
         try {
             items.push_back(new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code)));
             valid = true;
@@ -441,7 +473,7 @@ void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
             cout << "One or more arguments were invalid. Try again." << endl;
             valid = false;
         }
-    } while(!valid);  
+    } while(!valid && input != "exit");  
 }
 
 
@@ -468,7 +500,7 @@ void promptDeleteItem(vector<GMItem*> items) {
         } catch (invalid_argument e) {
              cout << "Invalid code entered: " << input;
         }
-    } while (!valid);
+    } while (!valid && input != "exit");
 }
 
 
