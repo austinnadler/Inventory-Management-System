@@ -13,7 +13,6 @@ string GMItem::toStringBack() const {
     ostringstream oss;
     oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
-    
 }
 
 

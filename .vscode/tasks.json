@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "clang++",
+            "args": [
+                "-g",
+                "-Wall",
+                "-std=c++14",
+                "main.cpp",
+                "GMItem.cpp",
+                "AgeRestrictedItem.cpp",
+                "ExpiringItem.cpp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+    }
+}
