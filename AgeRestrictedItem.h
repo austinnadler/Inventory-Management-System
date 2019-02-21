@@ -12,7 +12,16 @@ class AgeRestrictedItem : public GMItem {
 private:
     int minAge;
 
+    virtual void copyFields(const AgeRestrictedItem& copy) {
+        name = copy.name;
+        price = copy.price;
+        numOnHand = copy.numOnHand;
+        code = copy.code;
+        minAge = copy.minAge;
+    }
 public:
+    AgeRestrictedItem(const AgeRestrictedItem& copy) { copyFields(copy); }
+    
     AgeRestrictedItem(const int& minAge = 18, 
                       const string& name = "NA", 
                       const double& price = 0.0, 

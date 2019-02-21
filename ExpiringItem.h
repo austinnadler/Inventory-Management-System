@@ -23,6 +23,7 @@ private:
 public:
     const int MAX_WARNING_LENGTH = 20;
     ExpiringItem(const ExpiringItem& copy) { copyFields(copy); } // end copy ctor
+    
     ExpiringItem(const string& warning = "Check for expiration", 
                  const string& name = "NA", const double& price = 0.0, 
                  const int& numOnHand = 0, 

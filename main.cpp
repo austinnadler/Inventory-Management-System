@@ -21,7 +21,7 @@ const int MAX_CART_SIZE = 500;  // I know from working at Wal-Mart that POS syst
 // This program can really be broken into two programs: checkout() and performAdminFunctions()
 // performAdminFunctions() and related functions:
 void performAdminFunctions();
-    void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is in seperate functions to slim down the body of performAdminFunctions()
+    void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is seperate to slim down the body of performAdminFunctions()
     void promptChangeName(GMItem * itemPtr);
     void promptChangePrice(GMItem * itemPtr);
     void promptChangeCode(GMItem * itemPtr);
@@ -31,6 +31,7 @@ void performAdminFunctions();
     void promptAddExpiringItem(vector<GMItem*>& items);
     void promptAddAgeRestrictedItem(vector<GMItem*>& items);
     void promptDeleteItem(vector <GMItem*> items);
+
     void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
     void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 

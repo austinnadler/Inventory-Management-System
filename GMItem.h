@@ -5,6 +5,13 @@
 #include <string>
 using namespace std;
 class GMItem {
+    private:
+        virtual void copyFields(const GMItem& copy) {
+        name = copy.name;
+        price = copy.price;
+        numOnHand = copy.numOnHand;
+        code = copy.code;
+    }
     protected:
         string name;
         double price;
@@ -13,7 +20,8 @@ class GMItem {
 
     public:
         const int MAX_NAME_LENGTH = 20; // Name can be 20 characters long, or the method will return false. This is hard coded in error statements be
-
+        GMItem(const GMItem& copy) { copyFields(copy); }
+        
         GMItem(const string& name = "N/A", 
                const double& price = 0.0,
                const int& numOnHand = 0,
