@@ -14,11 +14,14 @@ string ExpiringItem::toStringPOS() const {
 }// end toStringPOS()
 
 
+
 string ExpiringItem::toStringBack() const {
     ostringstream oss;
     oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
 }
+
+
 
 bool ExpiringItem::setWarning(const string& warning) {
     if(!(warning.length() > MAX_WARNING_LENGTH)) {
@@ -33,14 +36,18 @@ bool ExpiringItem::setWarning(const string& warning) {
     }
 }// end setWarning()
 
+
+
 string ExpiringItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() << " Warning: " << "\"" << getWarning() << "\"";
     return oss.str();
 }// and toStringAdmin()
 
+
+
 string ExpiringItem::toStringFile() const {
     ostringstream oss;
     oss << GMItem::toStringFile() << "," << getWarning();
     return oss.str();
-}// end toStringFile()
+}// end toStringFile() 

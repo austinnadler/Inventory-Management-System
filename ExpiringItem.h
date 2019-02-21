@@ -11,19 +11,31 @@ using namespace std;
 class ExpiringItem : public GMItem {
 private:
     string warning;
+
+    virtual void copyFields(const ExpiringItem& copy) {
+        name = copy.name;
+        price = copy.price;
+        numOnHand = copy.numOnHand;
+        code = copy.code;
+        warning = copy.warning;
+    }
+
 public:
     const int MAX_WARNING_LENGTH = 20;
-    ExpiringItem(const string& warning = "Check for expiration", const string& name = "NA", const double& price = 0.0, const int& numOnHand = 0, const int& code = -1)  
-    :   GMItem(name, price, numOnHand, code), warning(warning)
-    {}//end ExpiringItem()
+    ExpiringItem(const ExpiringItem& copy) { copyFields(copy); } // end copy ctor
+    ExpiringItem(const string& warning = "Check for expiration", 
+                 const string& name = "NA", const double& price = 0.0, 
+                 const int& numOnHand = 0, 
+                 const int& code = -1)  
+    :   GMItem(name, price, numOnHand, code), warning(warning)  {}//end ctor
 
     ~ExpiringItem() {}//end ExpiringItem()
 
-    bool setWarning(const string& warning); // any format, but must be short than 20 characters
+    virtual int getMaxWarningLength()   { return MAX_WARNING_LENGTH; }
+    virtual string getWarning() const   { return warning; }//end getExpirationDate()
 
-    int getMaxWarningLength() { return MAX_WARNING_LENGTH; }
+    virtual bool setWarning(const string& warning); // any format, but must be short than 20 characters
 
-    string getWarning() const                     { return warning; }//end getExpirationDate()
     
     virtual string toStringPOS() const;
     virtual string toStringAdmin() const;

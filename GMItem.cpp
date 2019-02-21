@@ -9,16 +9,13 @@
 
 using namespace std;
 
-GMItem::GMItem(const string& name, const double& price, const int& numOnHand, const int& code) 
-: name(name), price(price), numOnHand(numOnHand), code(code)
-{}
-
-
 string GMItem::toStringBack() const {
     ostringstream oss;
     oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
 }
+
+
 
 bool GMItem::setItemName(const string& name)  {
     if(!(name.length() > MAX_NAME_LENGTH)) {
@@ -109,6 +106,3 @@ string GMItem::toStringFile() const {
     oss << code << "," <<  name << "," << fixed << setprecision(2) << price << "," << numOnHand;
     return oss.str();
 }// end toStringFile()
-
-// Overload not implimented yet, need to learn more about pointers
-// ostream& operator <<(ostream& os, const GMItem& o) {}// end <<()

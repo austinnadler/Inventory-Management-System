@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+
 using namespace std;
 
 string AgeRestrictedItem::toStringPOS() const {
@@ -14,11 +15,14 @@ string AgeRestrictedItem::toStringPOS() const {
 }// end toStringPOS()
 
 
+
 string AgeRestrictedItem::toStringBack() const {
     ostringstream oss;
     oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
 }
+
+
 
 bool AgeRestrictedItem::setMinAge(const string& minAge) {
     try {
@@ -29,11 +33,15 @@ bool AgeRestrictedItem::setMinAge(const string& minAge) {
     }
 }
 
+
+
 string AgeRestrictedItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() <<  " Minimum Age: " << right << getMinAge() << " years" ;
     return oss.str();
 }
+
+
 
 string AgeRestrictedItem::toStringFile() const {
     ostringstream oss;

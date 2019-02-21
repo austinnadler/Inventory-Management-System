@@ -45,6 +45,7 @@ void checkout(); // create a new array of pointers and put the items that you wa
 
 // Testing file reading and writing
 void testFileIOandPricing();
+void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file with a header
 
 // Utilities / Testing:
 void sortItemsByName(vector<GMItem*> items);
@@ -52,7 +53,6 @@ void sortItemsByCode(vector<GMItem*> items);
 void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); 
 file_status_t openFileIn(ifstream& ifs, const string& fileName);
 file_status_t openFileOut(ofstream& ofs, const string& fileName);
-void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file
 
 // Default file names to make testing quicker.
 string inFileName = "items.txt";
@@ -133,8 +133,6 @@ void performAdminFunctions() {
                     } else if (input == "exit") {
                         return;
                     }
-                        
-                    
                 }
                 found = false;
         } else if(input == "2") {
@@ -166,331 +164,10 @@ void performAdminFunctions() {
         cout << "Error opening file \"" << thisOutFileName << "\"" << endl;
         exit(1);
     }
-
+    // After making all the changes, write the new vector to the file and close the stream
     writeBack(ofs, inventory);
     ofs.close();
 }   
-
-void checkout() {
-    ostringstream oss;
-    string codeString;
-    int code = 0;
-    int numItemsInCart = 0;
-    double subTotal = 0;
-    bool foundItem = false;
-    vector<GMItem*> inventory;
-    vector<GMItem*> cart;
-    ifstream ifs;
-    ofstream ofs;
-
-    file_status_t fInStatus = openFileIn(ifs, inFileName);
-    if(!fInStatus) {
-        cout << "Error opening file \"" << inFileName << "\"" << endl;
-        exit(1);
-    }
-    loadItemsFromFile(ifs, inventory); 
-
-    do { 
-        foundItem = false;
-        if(numItemsInCart == MAX_CART_SIZE) {
-            cout << endl << "Maximum cart sized reached. Totaling the order..." << endl << endl;
-                    printPOSHeader();
-                    printItemsPOS(cart);
-                    printPOSPriceSection(cart);
-            cout << endl;
-            return;
-        }                        
-
-        cout << "Enter product code (This code should be only numbers.) (Type \"total\" when done entering items): ";
-        getline(cin, codeString);
-        if(codeString == "total") {
-            cout << endl;
-                    printPOSHeader();
-                    printItemsPOS(cart);
-                    printPOSPriceSection(cart);
-                    for(int i = 0; i < numItemsInCart; i++) {
-                        cart.at(i)->decreaseCount();
-                    }
-            cout << endl;
-        } else if (codeString == "undo") {
-                if(cart.size() < 1) {
-                    cout << endl << "The list is already empty!" << endl;
-                } else {
-                    cart.pop_back();
-                    printPOSHeader();
-                    printItemsPOS(cart);
-                    printPOSPriceSection(cart);
-                }
-
-        } else {
-            try {
-                code = stoi(codeString);
-                for(int i = 0; i < inventory.size(); i++) {
-                        
-                        // FIX: This code does not work
-                        // if (foundItem == false && i == numItems) { 
-                        //     cout << "No item with that code was found in the inventory file." << endl;
-                        // } 
-
-                    if(code == inventory.at(i)->getItemCode()) {
-                        cart.push_back(inventory.at(i));
-
-                                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
-
-                        GMItem *gm = inventory.at(i);
-                        AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
-                        if(ar != NULL) {
-                        string valid;
-                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
-                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
-                        getline(cin, valid);
-                            if(valid == "y") {
-                                oss << cart.back()->toStringPOS();
-                                subTotal += cart.back()->getItemPrice();
-                                numItemsInCart++;
-                                foundItem = true;
-                            } else {
-                                cout << "Customer cannot purchase this item." << endl;
-                            }
-                        } else {
-                            oss << cart.back()->toStringPOS();
-                            subTotal += cart.back()->getItemPrice();
-                            numItemsInCart++;
-                            foundItem = true;
-                        }
-                    }                     
-                }
-            } catch(exception e) {
-                cout << "Invalid Code Entered!" << endl;
-            }
-        }
-
-        cout << endl;
-                printPOSHeader();
-                printItemsPOS(cart);
-            cout << endl;
-                printPOSPriceSection(cart);
-        cout << endl;
-        
-    } while (codeString != "total" && numItemsInCart < MAX_CART_SIZE);
-}   
-// Take the array of items and go through it adding all of the prices up and return it as a double
-total_price_t calculateSubtotal(vector<GMItem*> items){
-    total_price_t total = 0;
-    for(int i = 0; i < items.size(); i++) {
-        total += items.at(i)->getItemPrice();
-    }
-    return total;
-}// end calculateSubtotal()
-
-
-// Take the subtotal and calculate the tax, add it to the subtotal and return it as a double
-total_price_t calculateTotal(double& subtotal){
-    return subtotal + calculateTax(subtotal);
-}// end calculateTotal()
-
-
-// Take the subTotal and calculate the tax that needs to be added based on the constant declared TAX_RATE. Program doesn't support multiple rates but could be implimented later
-total_price_t calculateTax(const double& subTotal) {
-    total_price_t taxes = subTotal * TAX_RATE;
-    return taxes;
-}// end calculateTax()
-
-
-// Take an ifs and an empty array and fill said array with items from a FORMATTED file
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
-    string itemType;
-    string name;
-    string price;
-    string qtyOnHand;
-    string expirationDate;
-    string code;
-    string minAge;
-
-    using type_id_t = string;
-    type_id_t ageRestricted = "ar";
-    type_id_t warning = "warn";
-    type_id_t general = "gm";
-
-    getline(ifs, itemType, ',');
-    while(!ifs.eof()) {
-        if(itemType == warning) {
-            getline(ifs, expirationDate, ',');
-            getline(ifs, name, ',');
-            getline(ifs, price, ',');
-            getline(ifs, qtyOnHand, ',');
-            getline(ifs, code);
-
-            ExpiringItem * ex = new ExpiringItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(ex);
-            getline(ifs, itemType, ',');
-        } else if (itemType == general) {
-            getline(ifs, name, ',');
-            getline(ifs, price, ',');
-            getline(ifs, qtyOnHand, ',');
-            getline(ifs, code);
-
-            GMItem * gm = new GMItem(name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(gm);
-            getline(ifs, itemType, ',');
-        } 
-        else if (itemType == ageRestricted) {
-            getline(ifs, minAge, ',');
-            getline(ifs, name, ',');
-            getline(ifs, price, ',');
-            getline(ifs, qtyOnHand, ',');
-            getline(ifs, code);
-
-            AgeRestrictedItem * ar = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(ar);
-            getline(ifs, itemType, ',');
-        }
-    }
-}// end loadItemsFromFile()
-
-
-// Take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
-void writeItems(ofstream& ofs, vector<GMItem*> items) {
-    for(int i = 0; i < items.size(); i++) {
-        ofs << items.at(i)->toStringFile() << endl;
-    }
-    ofs.close();
-}// end writeBack()
-
-
-void writeBack(ofstream& ofs, vector<GMItem*> items) {
-    for(int i = 0; i < items.size(); i++) {
-        ofs << items.at(i)->toStringBack() << endl;
-    }
-    ofs.close();
-}// end writeItems()
-
-
-// Take a provided array of items and print it to the screen using the toStringPOS() method
-void printItemsPOS(vector<GMItem*> items) {
-    for(int i = 0; i < items.size(); i++) {
-        cout  << items.at(i)->toStringPOS() << endl;
-    }
-}// end printItemsPOS()
-
-
-// use provided ifstream to open provided filename to read information from
-file_status_t openFileIn(ifstream& ifs, const string& fileName) {
-    ifs.open(fileName);
-    return ifs.is_open();
-}// end openFileIn()
-
-
-// use provided ofstream to open provided filename to write data to
-file_status_t openFileOut(ofstream& ofs, const string& fileName){
-    ofs.open(fileName);
-    return ofs.is_open();
-}// end openFileOut()
-
-
-// a pos system for selling inventory. 
-//FIX: items are currently removed from inventory as they are added to the list, and not as they are actually sold
-
-
-// print the formatted POS header
-void printPOSHeader() {
-    cout << left << "INDEX\t" << "CODE\t" << "NAME" <<  right << setw(26) << "PRICE" << endl;
-}
-
-
-// test some of the base functions -- doesn't include subclass info just code, name, price
-void testFileIOandPricing() {
-    ifstream ifs;
-    ofstream ofs;
-    vector<GMItem*> items;
-    // cout << "Enter the input file name with extension: ";
-    // getline(cin, inFileName);
-    printPOSHeader();
-    file_status_t fInStatus = openFileIn(ifs, inFileName);
-    if(!fInStatus) {
-        cout << "Error opening file \"" << inFileName << "\"" << endl;
-        exit(1);
-    }
-    loadItemsFromFile(ifs, items); 
-
-    // cout << "Enter the output file name with extension: ";
-    // getline(cin, outFileName);
-    file_status_t fOutStatus = openFileOut(ofs, outFileName);
-    if(!fOutStatus) {
-        cout << "Error opening file \"" << outFileName << "\"" << endl;
-        exit(1);
-    }
-
-    ofs << "Code,Name,Price,On Hand,Expiration" << endl;
-    writeItems(ofs, items);
-    sortItemsByName(items);
-    printItemsPOS(items);
-    printPOSPriceSection(items);   
-}
-
-
-// do the end of the transaction totaling and outputting all at once given the array of items and actual size size
-void printPOSPriceSection(vector<GMItem*> items) {
-    total_price_t subTotal = calculateSubtotal(items);
-    total_price_t taxes = calculateTax(subTotal);
-    total_price_t totalPrice = calculateTotal(subTotal);
-
-    cout << "Total number of items: " << items.size() << endl
-         << "Subtotal: $" << subTotal << endl
-         << "Tax: $" << fixed << setprecision(2) << taxes << " (at " << TAX_RATE*100 << "%)" << endl
-         << "Total: $" << fixed << setprecision(2) << totalPrice << endl;
-}
-
-
-
-void printAdminInfo(vector<GMItem*> items) {
-     for(int i = 0; i < items.size(); i++) {
-        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
-        cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
-    }
-}
-
-
-// Insertion sort used 
-void sortItemsByName(vector<GMItem*> items) {
-    int i, j; 
-    GMItem * key;
-    for (i = 1; i < items.size(); i++) { 
-       key = items.at(i); 
-       j = i-1; 
-       while (j >= 0 && items.at(i)->getItemName() > key->getItemName()) { 
-           items.at(i+1) = items.at(j); 
-           j = j-1; 
-       } 
-       items.at(j+1) = key; 
-   } 
-}
-
-
-
-void sortItemsByCode(vector<GMItem*> items) {
-    int i, j; 
-    GMItem * key;
-    for (i = 1; i < items.size(); i++) { 
-       key = items.at(i); 
-       j = i-1; 
-       while (j >= 0 && items.at(i)->getItemCode() > key->getItemCode()) { 
-           items.at(i+1) = items.at(j); 
-           j = j-1; 
-       } 
-       items.at(j+1) = key; 
-   } 
-}
-
-
-bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
-    if(items.size() == MAX_CART_SIZE) {
-        return false;
-    } else {
-        items.push_back(newItem);
-        return true;
-    }
-}
 
 
 
@@ -763,3 +440,327 @@ void promptDeleteItem(vector<GMItem*> items) {
         }
     } while (!valid);
 }
+
+
+
+void checkout() {
+    ostringstream oss;
+    string codeString;
+    int code = 0;
+    int numItemsInCart = 0;
+    double subTotal = 0;
+    bool foundItem = false;
+    vector<GMItem*> inventory;
+    vector<GMItem*> cart;
+    ifstream ifs;
+    ofstream ofs;
+
+    file_status_t fInStatus = openFileIn(ifs, inFileName);
+    if(!fInStatus) {
+        cout << "Error opening file \"" << inFileName << "\"" << endl;
+        exit(1);
+    }
+    loadItemsFromFile(ifs, inventory); 
+
+    do { 
+        foundItem = false;
+        if(numItemsInCart == MAX_CART_SIZE) {
+            cout << endl << "Maximum cart sized reached. Totaling the order..." << endl << endl;
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+            cout << endl;
+            return;
+        }                        
+
+        cout << "Enter product code (This code should be only numbers.) (Type \"total\" when done entering items): ";
+        getline(cin, codeString);
+        if(codeString == "total") {
+            cout << endl;
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+                    for(int i = 0; i < numItemsInCart; i++) {
+                        cart.at(i)->decreaseCount();
+                    }
+            cout << endl;
+        } else if (codeString == "undo") {
+                if(cart.size() < 1) {
+                    cout << endl << "The list is already empty!" << endl;
+                } else {
+                    cart.pop_back();
+                    printPOSHeader();
+                    printItemsPOS(cart);
+                    printPOSPriceSection(cart);
+                }
+        } else {
+            try {
+                code = stoi(codeString);
+                for(int i = 0; i < inventory.size(); i++) {
+                        
+                        // FIX: This code does not work
+                        // if (foundItem == false && i == numItems) { 
+                        //     cout << "No item with that code was found in the inventory file." << endl;
+                        // } 
+
+                    if(code == inventory.at(i)->getItemCode()) {
+                        cart.push_back(inventory.at(i));
+
+                                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
+
+                        GMItem *gm = inventory.at(i);
+                        AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
+                        if(ar != NULL) {
+                        string valid;
+                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
+                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
+                        getline(cin, valid);
+                            if(valid == "y") {
+                                oss << cart.back()->toStringPOS();
+                                subTotal += cart.back()->getItemPrice();
+                                numItemsInCart++;
+                                foundItem = true;
+                            } else {
+                                cout << "Customer cannot purchase this item." << endl;
+                            }
+                        } else {
+                            oss << cart.back()->toStringPOS();
+                            subTotal += cart.back()->getItemPrice();
+                            numItemsInCart++;
+                            foundItem = true;
+                        }
+                    }                     
+                }
+            } catch(exception e) {
+                cout << "Invalid Code Entered!" << endl;
+            }
+        }
+
+        cout << endl;
+                printPOSHeader();
+                printItemsPOS(cart);
+            cout << endl;
+                printPOSPriceSection(cart);
+        cout << endl;
+        
+    } while (codeString != "total" && numItemsInCart < MAX_CART_SIZE);
+}   
+// Take the array of items and go through it adding all of the prices up and return it as a double
+total_price_t calculateSubtotal(vector<GMItem*> items){
+    total_price_t total = 0;
+    for(int i = 0; i < items.size(); i++) {
+        total += items.at(i)->getItemPrice();
+    }
+    return total;
+}// end calculateSubtotal()
+
+
+// Take the subtotal and calculate the tax, add it to the subtotal and return it as a double
+total_price_t calculateTotal(double& subtotal){
+    return subtotal + calculateTax(subtotal);
+}// end calculateTotal()
+
+
+// Take the subTotal and calculate the tax that needs to be added based on the constant declared TAX_RATE. Program doesn't support multiple rates but could be implimented later
+total_price_t calculateTax(const double& subTotal) {
+    total_price_t taxes = subTotal * TAX_RATE;
+    return taxes;
+}// end calculateTax()
+
+
+// Take an ifs and an empty array and fill said array with items from a FORMATTED file
+void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
+    string itemType;
+    string name;
+    string price;
+    string qtyOnHand;
+    string expirationDate;
+    string code;
+    string minAge;
+
+    using type_id_t = string;
+    type_id_t ageRestricted = "ar";
+    type_id_t warning = "warn";
+    type_id_t general = "gm";
+
+    getline(ifs, itemType, ',');
+    while(!ifs.eof()) {
+        if(itemType == warning) {
+            getline(ifs, expirationDate, ',');
+            getline(ifs, name, ',');
+            getline(ifs, price, ',');
+            getline(ifs, qtyOnHand, ',');
+            getline(ifs, code);
+
+            ExpiringItem * ex = new ExpiringItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
+            items.push_back(ex);
+            getline(ifs, itemType, ',');
+        } else if (itemType == general) {
+            getline(ifs, name, ',');
+            getline(ifs, price, ',');
+            getline(ifs, qtyOnHand, ',');
+            getline(ifs, code);
+
+            GMItem * gm = new GMItem(name, stod(price), stoi(qtyOnHand), stoi(code));
+            items.push_back(gm);
+            getline(ifs, itemType, ',');
+        } 
+        else if (itemType == ageRestricted) {
+            getline(ifs, minAge, ',');
+            getline(ifs, name, ',');
+            getline(ifs, price, ',');
+            getline(ifs, qtyOnHand, ',');
+            getline(ifs, code);
+
+            AgeRestrictedItem * ar = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(qtyOnHand), stoi(code));
+            items.push_back(ar);
+            getline(ifs, itemType, ',');
+        }
+    }
+}// end loadItemsFromFile()
+
+
+// Take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void writeItems(ofstream& ofs, vector<GMItem*> items) {
+    for(int i = 0; i < items.size(); i++) {
+        ofs << items.at(i)->toStringFile() << endl;
+    }
+    ofs.close();
+}// end writeBack()
+
+
+void writeBack(ofstream& ofs, vector<GMItem*> items) {
+    for(int i = 0; i < items.size(); i++) {
+        ofs << items.at(i)->toStringBack() << endl;
+    }
+    ofs.close();
+}// end writeItems()
+
+
+// Take a provided array of items and print it to the screen using the toStringPOS() method
+void printItemsPOS(vector<GMItem*> items) {
+    for(int i = 0; i < items.size(); i++) {
+        cout  << items.at(i)->toStringPOS() << endl;
+    }
+}// end printItemsPOS()
+
+
+// use provided ifstream to open provided filename to read information from
+file_status_t openFileIn(ifstream& ifs, const string& fileName) {
+    ifs.open(fileName);
+    return ifs.is_open();
+}// end openFileIn()
+
+
+// use provided ofstream to open provided filename to write data to
+file_status_t openFileOut(ofstream& ofs, const string& fileName){
+    ofs.open(fileName);
+    return ofs.is_open();
+}// end openFileOut()
+
+
+// a pos system for selling inventory. 
+//FIX: items are currently removed from inventory as they are added to the list, and not as they are actually sold
+
+
+// print the formatted POS header
+void printPOSHeader() {
+    cout << left << "INDEX\t" << "CODE\t" << "NAME" <<  right << setw(26) << "PRICE" << endl;
+}
+
+
+// test some of the base functions -- doesn't include subclass info just code, name, price
+void testFileIOandPricing() {
+    ifstream ifs;
+    ofstream ofs;
+    vector<GMItem*> items;
+    // cout << "Enter the input file name with extension: ";
+    // getline(cin, inFileName);
+    printPOSHeader();
+    file_status_t fInStatus = openFileIn(ifs, inFileName);
+    if(!fInStatus) {
+        cout << "Error opening file \"" << inFileName << "\"" << endl;
+        exit(1);
+    }
+    loadItemsFromFile(ifs, items); 
+
+    // cout << "Enter the output file name with extension: ";
+    // getline(cin, outFileName);
+    file_status_t fOutStatus = openFileOut(ofs, outFileName);
+    if(!fOutStatus) {
+        cout << "Error opening file \"" << outFileName << "\"" << endl;
+        exit(1);
+    }
+
+    ofs << "Code,Name,Price,On Hand,Expiration" << endl;
+    writeItems(ofs, items);
+    sortItemsByName(items);
+    printItemsPOS(items);
+    printPOSPriceSection(items);   
+}
+
+
+// do the end of the transaction totaling and outputting all at once given the array of items and actual size size
+void printPOSPriceSection(vector<GMItem*> items) {
+    total_price_t subTotal = calculateSubtotal(items);
+    total_price_t taxes = calculateTax(subTotal);
+    total_price_t totalPrice = calculateTotal(subTotal);
+
+    cout << "Total number of items: " << items.size() << endl
+         << "Subtotal: $" << subTotal << endl
+         << "Tax: $" << fixed << setprecision(2) << taxes << " (at " << TAX_RATE*100 << "%)" << endl
+         << "Total: $" << fixed << setprecision(2) << totalPrice << endl;
+}
+
+
+
+void printAdminInfo(vector<GMItem*> items) {
+     for(int i = 0; i < items.size(); i++) {
+        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
+        cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
+    }
+}
+
+
+// Insertion sort used 
+void sortItemsByName(vector<GMItem*> items) {
+    int i, j; 
+    GMItem * key;
+    for (i = 1; i < items.size(); i++) { 
+       key = items.at(i); 
+       j = i-1; 
+       while (j >= 0 && items.at(i)->getItemName() > key->getItemName()) { 
+           items.at(i+1) = items.at(j); 
+           j = j-1; 
+       } 
+       items.at(j+1) = key; 
+   } 
+}
+
+
+
+void sortItemsByCode(vector<GMItem*> items) {
+    int i, j; 
+    GMItem * key;
+    for (i = 1; i < items.size(); i++) { 
+       key = items.at(i); 
+       j = i-1; 
+       while (j >= 0 && items.at(i)->getItemCode() > key->getItemCode()) { 
+           items.at(i+1) = items.at(j); 
+           j = j-1; 
+       } 
+       items.at(j+1) = key; 
+   } 
+}
+
+
+bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
+    if(items.size() == MAX_CART_SIZE) {
+        return false;
+    } else {
+        items.push_back(newItem);
+        return true;
+    }
+}
+
+
