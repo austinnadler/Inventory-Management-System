@@ -16,7 +16,7 @@ using file_status_t = bool;
 using num_items_t = int;
 using total_price_t = double;
 
-const int TAX_RATE = 0.07; // IL 7.1%
+const double TAX_RATE = 0.07; // IL 7.1%
 const int MAX_CART_SIZE = 500;  // I know from working at Wal-Mart that POS systems have built in caps around 400 or 500 so I figured I'd add one.
 // This program can really be broken into two programs: checkout() and performAdminFunctions()
 // performAdminFunctions() and related functions:
@@ -27,9 +27,9 @@ void performAdminFunctions();
     void promptChangeCode(GMItem * itemPtr);
     void promptChangeWarning(GMItem * itemPtr);
     void promptChangeMinAge(GMItem * itemPtr);
-    void promptAddGMItem(vector<GMItem*> items);
-    void promptAddExpiringItem(vector<GMItem*> items);
-    void promptAddAgeRestrictedItem(vector<GMItem*> items);
+    void promptAddGMItem(vector<GMItem*>& items);
+    void promptAddExpiringItem(vector<GMItem*>& items);
+    void promptAddAgeRestrictedItem(vector<GMItem*>& items);
     void promptDeleteItem(vector <GMItem*> items);
     void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
     void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
@@ -59,9 +59,26 @@ string inFileName = "items.txt";
 string outFileName = "itemsOut.csv";
 
 int main() {
-    // testFileIOandPricing();
-    // checkout();
-    performAdminFunctions();
+    string cmd;
+    bool validCmd = false;;
+
+    do {
+        cout << "or enter 'admin' to use the performAdminFunctions function" << endl
+             << "or enter 'exit' to exit." << endl
+             << "Enter a command: ";
+        getline(cin,cmd);
+
+        if(cmd == "pos") {
+            checkout();
+            validCmd = true;
+        } else if(cmd == "admin") {
+            performAdminFunctions();
+            validCmd = true;
+        } else if(cmd == "exit") {
+            validCmd = true; // redundant and useless but for readability
+        }
+    } while (!validCmd);
+
     return 0;
 }// end main()
 
@@ -91,8 +108,9 @@ void performAdminFunctions() {
         //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the output be controlled by iomanip
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
-        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
-        cout << "1. Manage current inventory" << endl
+        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl
+             << "Note: changes will not appear in new file until you enter 'exit' and end the session." << endl
+             << "1. Manage current inventory" << endl
              << "2. Add item" << endl
              << "3. Delete an item" << endl
              << "and at any time, you can enter 'exit' to quit the program." << endl
@@ -121,11 +139,11 @@ void performAdminFunctions() {
                     if(input == "1") {
                         promptChangeCount(itemPtr);
                     } else if(input == "2") {
-                        changePrice(itemPtr);            
+                        promptChangePrice(itemPtr);            
                     } else if(input == "3") {
                         promptChangeName(itemPtr);         // These are all defined below to slim down paF()
                     } else if (input == "4") {
-                        promptC(itemPtr);
+                        promptChangeCode(itemPtr);
                     } else if(input == "5") {
                         promptChangeWarning(itemPtr);
                     } else if(input == "6") {
@@ -218,7 +236,7 @@ void promptChangeCount(GMItem * itemPtr) {
 
 
 
-void changePrice(GMItem * itemPtr) {
+void promptChangePrice(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     do {
@@ -252,7 +270,7 @@ void promptChangeName(GMItem * itemPtr) {
 
 
 
-void promptC(GMItem * itemPtr) {
+void promptChangeCode(GMItem * itemPtr) {
     string input;
     bool validIn = false;
     do {
@@ -349,19 +367,23 @@ void promptChangeMinAge(GMItem * itemPtr) {
 
 
 
-void promptAddGMItem(vector<GMItem*> items) {
+void promptAddGMItem(vector<GMItem*>& items) {
     bool valid;
     string code, name, price, numOnHand;
     do {
-        cout << "Enter item information as such <code,name,numberOnHand,price>";
-        getline(cin, code, ',');
-        getline(cin, name, ',');
-        getline(cin, numOnHand, ',');
+        cout << "Enter item information as follows: " << endl;
+        cout << "Enter the code: ";
+        getline(cin, code);
+        cout << "Enter the name: ";
+        getline(cin, name);
+        cout << "Enter the quantity on hand: ";
+        getline(cin, numOnHand);
+        cout << "Enter the price: ";
         getline(cin, price);
         try {
             items.push_back(new GMItem(name, stod(price), stoi(numOnHand), stoi(code)));
             valid = true;
-        } catch (invalid_argument e) {
+        } catch (exception e) {
             cout << "One or more arguments were invalid. Try again." << endl;
             valid = false;
         }
@@ -370,16 +392,20 @@ void promptAddGMItem(vector<GMItem*> items) {
 
 
 
-void promptAddExpiringItem(vector<GMItem*> items) {
+void promptAddExpiringItem(vector<GMItem*>& items) {
     bool valid;
     string code, name, price, numOnHand, warning;
     do {
-        cout << "Enter item information as follows <code,name,numberOnHand,price,20 char warning msg>" << endl
-             << "Enter item information: ";
-        getline(cin, code, ',');
-        getline(cin, name, ',');
-        getline(cin, numOnHand, ',');
-        getline(cin, price, ',');
+        cout << "Enter item information as follows: " << endl;
+        cout << "Enter the code: ";
+        getline(cin, code);
+        cout << "Enter the name: ";
+        getline(cin, name);
+        cout << "Enter the quantity on hand: ";
+        getline(cin, numOnHand);
+        cout << "Enter the price: ";
+        getline(cin, price);
+        cout << "Enter the 20 character maximum warning: ";
         getline(cin, warning);
         try {
             items.push_back(new ExpiringItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
@@ -393,16 +419,20 @@ void promptAddExpiringItem(vector<GMItem*> items) {
 
 
 
-void promptAddAgeRestrictedItem(vector<GMItem*> items) {
+void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
     bool valid;
     string code, name, price, numOnHand, minAge;
     do {
-        cout << "Enter item information as follows <code,name,numberOnHand,price,minAge>"<< endl
-             << "Enter item information: ";
-        getline(cin, code, ',');
-        getline(cin, name, ',');
-        getline(cin, numOnHand, ',');
-        getline(cin, price, ',');
+        cout << "Enter item information as follows: " << endl;
+        cout << "Enter the code: ";
+        getline(cin, code);
+        cout << "Enter the name: ";
+        getline(cin, name);
+        cout << "Enter the quantity on hand: ";
+        getline(cin, numOnHand);
+        cout << "Enter the price: ";
+        getline(cin, price);
+        cout << "Enter the minimum age: ";
         getline(cin, minAge);
         try {
             items.push_back(new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code)));
@@ -442,7 +472,7 @@ void promptDeleteItem(vector<GMItem*> items) {
 }
 
 
-
+// In checkout, i imagine the code being scanned in from a barcode. When testing, I just have the inventory file open.
 void checkout() {
     ostringstream oss;
     string codeString;
@@ -754,6 +784,7 @@ void sortItemsByCode(vector<GMItem*> items) {
 }
 
 
+
 bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
     if(items.size() == MAX_CART_SIZE) {
         return false;
@@ -762,5 +793,3 @@ bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
         return true;
     }
 }
-
-

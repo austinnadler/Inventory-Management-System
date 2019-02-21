@@ -12,14 +12,6 @@ class AgeRestrictedItem : public GMItem {
 private:
     int minAge;
 
-    virtual void copyFields(const AgeRestrictedItem& copy) {
-        name = copy.name;
-        price = copy.price;
-        numOnHand = copy.numOnHand;
-        code = copy.code;
-        minAge = copy.minAge;
-    }
-
 public:
     AgeRestrictedItem(const int& minAge = 18, 
                       const string& name = "NA", 
@@ -27,8 +19,6 @@ public:
                       const int& numOnHand = 0, 
                       const int& code = -1)  
     :   GMItem(name, price, numOnHand, code), minAge(minAge)    {}// end ctor
-
-    AgeRestrictedItem(const AgeRestrictedItem& copy) { copyFields(copy); } // end copy ctor
 
     ~AgeRestrictedItem() {}//end AgeRestrictedItem()
     

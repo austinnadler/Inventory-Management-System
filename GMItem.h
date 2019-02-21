@@ -11,12 +11,6 @@ class GMItem {
         int numOnHand;
         int code;   // UPC
 
-        virtual void copyFields(const GMItem& copy) {
-            name = copy.name;
-            price = copy.price;
-            numOnHand = copy.numOnHand;
-            code = copy.code;
-        }
     public:
         const int MAX_NAME_LENGTH = 20; // Name can be 20 characters long, or the method will return false. This is hard coded in error statements be
 
@@ -26,7 +20,6 @@ class GMItem {
                const int& code = -1)
         : name(name), price(price), numOnHand(numOnHand), code(code) {} //end ctor
 
-        GMItem(const GMItem& copy) { copyFields(copy); }
         ~GMItem() {}//end ~GMItem()
 
         virtual bool setItemName  (const string& name) final;
