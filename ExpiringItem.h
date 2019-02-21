@@ -11,19 +11,16 @@ using namespace std;
 class ExpiringItem : public GMItem {
 private:
     string warning;
-
-    virtual void copyFields(const ExpiringItem& copy) {
+    
+public:
+    const int MAX_WARNING_LENGTH = 20;
+    ExpiringItem(const ExpiringItem& copy) { 
         name = copy.name;
         price = copy.price;
         numOnHand = copy.numOnHand;
         code = copy.code;
-        warning = copy.warning;
-    }
-
-public:
-    const int MAX_WARNING_LENGTH = 20;
-    ExpiringItem(const ExpiringItem& copy) { copyFields(copy); } // end copy ctor
-    
+        warning = copy.warning; 
+    } // end copy ctor
     ExpiringItem(const string& warning = "Check for expiration", 
                  const string& name = "NA", const double& price = 0.0, 
                  const int& numOnHand = 0, 

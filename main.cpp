@@ -35,7 +35,7 @@ void performAdminFunctions();
     void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
     void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 
-void checkout(); // create a new array of pointers and put the items that you want to "buy" into it. Program totals the purchase and adds tax. Uses vector functions for deletion and adding.
+void checkout(); // create a new array of pointers and put the items that you want to check out into it. Program totals the purchase and adds tax, then decreases whatever counts need to be decreased. Uses vector functions for deletion and adding.
     void printItemsPOS(vector<GMItem*> items);          // To screen, displays only code, name, and price with periods for spacing, for use in checkout()
     void printPOSPriceSection(vector<GMItem*> items);   // print subtotal, taxes, and total, for use in checkout()
     void printPOSHeader();  
@@ -64,7 +64,8 @@ int main() {
     bool validCmd = false;;
 
     do {
-        cout << "or enter 'admin' to use the performAdminFunctions function" << endl
+        cout << "Enter 'admin' to use the performAdminFunctions function" << endl
+             << "Enter 'pos' to use the checkout function" << endl
              << "or enter 'exit' to exit." << endl
              << "Enter a command: ";
         getline(cin,cmd);
