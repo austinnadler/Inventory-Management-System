@@ -28,7 +28,7 @@ public:
                       const int& code = -1)  
     :   GMItem(name, price, numOnHand, code), minAge(minAge)    {}// end ctor
 
-    ~AgeRestrictedItem() {}//end AgeRestrictedItem()
+    virtual ~AgeRestrictedItem() {}//end AgeRestrictedItem()
     
     virtual bool setMinAge(const string& minAge);
 

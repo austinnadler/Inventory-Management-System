@@ -25,7 +25,7 @@ class GMItem {
                const int& code = -1)
         : name(name), price(price), numOnHand(numOnHand), code(code) {} //end ctor
 
-        ~GMItem() {}//end ~GMItem()
+        virtual ~GMItem() {}//end ~GMItem()
 
         virtual bool setItemName  (const string& name) final;
         virtual bool setItemPrice (const string& price) final;

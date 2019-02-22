@@ -27,7 +27,7 @@ public:
                  const int& code = -1)  
     :   GMItem(name, price, numOnHand, code), warning(warning)  {}//end ctor
 
-    ~ExpiringItem() {}//end ExpiringItem()
+    virtual ~ExpiringItem() {}//end ExpiringItem()
 
     virtual int getMaxWarningLength()   { return MAX_WARNING_LENGTH; }
     virtual string getWarning() const   { return warning; }//end getExpirationDate()

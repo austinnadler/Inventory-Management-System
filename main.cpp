@@ -25,8 +25,8 @@ void performAdminFunctions();
     void promptChangeName(GMItem * itemPtr);
     void promptChangePrice(GMItem * itemPtr);
     void promptChangeCode(GMItem * itemPtr);
-    void promptChangeWarning(GMItem * itemPtr);
-    void promptChangeMinAge(GMItem * itemPtr);
+    void promptChangeWarning(vector<GMItem*>& items, const int& index);
+    void promptChangeMinAge(vector<GMItem*>& items, const int& index);
     void promptAddGMItem(vector<GMItem*>& items);
     void promptAddExpiringItem(vector<GMItem*>& items);
     void promptAddAgeRestrictedItem(vector<GMItem*>& items);
@@ -85,9 +85,16 @@ int main() {
             } while(still);
             validCmd = true;
         } else if(cmd == "admin") {
+            validCmd = true;
             do {
                 performAdminFunctions();
-                validCmd = true;
+                cout << "Keep using admin? (y/n): ";
+                getline(cin, stillstr);
+                if(stillstr == "y") {
+                    still = true;
+                } else if (stillstr == "n") {
+                    still = false;
+                }
             } while(still);
         } else if(cmd == "exit") {
             validCmd = true; 
@@ -102,6 +109,7 @@ void performAdminFunctions() {
     string thisInfileName = inFileName;
     string thisOutFileName = "newlog.txt";
     bool found = false;
+    int index;
     ifstream ifs;
     ofstream ofs;
     vector<GMItem*> inventory;
@@ -124,7 +132,7 @@ void performAdminFunctions() {
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
         cout << "----------|------------|---------------------|-----------|--------|--------------" << endl
-             << "Note: changes will not appear in new file until you enter 'exit' and end the session." << endl
+             << "Enter the number of the action you want to perform." << endl
              << "1. Manage current inventory" << endl
              << "2. Add item" << endl
              << "3. Delete an item" << endl
@@ -136,12 +144,12 @@ void performAdminFunctions() {
             // I found it better when testing to not have these as loops to avoid having to restart the program constantly
             cout << "\nEnter index of the number of the item that you want to edit: ";
             getline(cin, input);
-
             if(input == "exit") {
                 return;
             } else {
                 try {
                     GMItem * itemPtr = inventory[stoi(input)];
+                    index = stoi(input);
                     found = true;
                     cout << endl 
                          << "Item found: " << itemPtr->getItemName() << endl << endl
@@ -205,9 +213,9 @@ void performAdminFunctions() {
                             // FIX:
                             promptChangeCode(itemPtr);
                         } else if(input == "5") {
-                            promptChangeWarning(itemPtr);
+                            promptChangeWarning(inventory, index);
                         } else if(input == "6") {
-                            promptChangeMinAge(itemPtr);
+                            //promptChangeMinAge(itemPtr);
                         } else if (input == "exit") {
                             return;
                         }
@@ -369,55 +377,65 @@ void promptChangeCode(GMItem * itemPtr) {
 
 
 
-void promptChangeWarning(GMItem * itemPtr) {
+void promptChangeWarning(vector<GMItem*>& items, const int& index) {
     string input;
     bool validIn = false;
+    GMItem * tmp = items.at(index);
+    ExpiringItem * newPtr = nullptr;
     //More RTTI to check if the item has an expiration before trying to change it.
-    ExpiringItem * ex = dynamic_cast<ExpiringItem*>(itemPtr);
+    ExpiringItem * ex = dynamic_cast<ExpiringItem*>(items.at(index));
     if(ex != NULL) {
         do {
-            cout << "\nEnter 'exit' to quit. Warning should be 20 characters or shorter and on one line." << endl
-                 << "\nEnter the new warning for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+            cout << "\nEnter 'exit' to quit. Warning should be 20 characters or less." << endl
+                 << "\nEnter the new warning for item " << tmp->getItemName() << " " << tmp->getItemCode() << ": ";
             getline(cin, input);
             validIn = ex->setWarning(input);
             if(!validIn) {
                 cout << "Invalid input: " << input << endl;
             }
         } while(!validIn && input != "exit");
-    validIn = false;
+        validIn = false;
     } else {
         cout << "\nThis item doesn't have a warning. Warnings must be 20 characters or shorer." << endl
              << "\nEnter 'add' to add one, or anything else to back out: ";
         getline(cin, input);
         if(input == "add") {
             do {
-                cout << "Enter the new warning: ";
+                cout << "Enter the new warning (20 characters or less): ";
                 getline(cin, input);
-                ExpiringItem * newEx = new ExpiringItem;
-                bool testr = newEx->setWarning(input);
-                if(testr) {
-                    newEx = new ExpiringItem(input, itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
-                    itemPtr = newEx;
-                    validIn = true;
+                
+                validIn = newPtr->setWarning(input);
+                if(validIn) {
+                    string warning = input;
+                    string name = tmp->getItemName();
+                    int numOH = tmp->getNumOnHand();
+                    double price = tmp->getItemPrice();
+                    int code = tmp->getItemCode();
+                    newPtr = new ExpiringItem(warning, name, numOH, price, code);
+                    delete items.at(index);
+                    items.at(index) = newPtr;
+                    delete tmp;
                 } else {
                     cout << "Invalid input: " << input << endl;
                 }
             } while (!validIn && input != "exit");
         }
     }
+    delete ex;
 }
 
 
 
-void promptChangeMinAge(GMItem * itemPtr) {
+void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
     string input;
     bool validIn = false;
+    GMItem * tmp = items.at(index);
     //More RTTI to check if the item has an expiration before trying to change it.
-    AgeRestrictedItem * ar = dynamic_cast<AgeRestrictedItem*>(itemPtr);
+    AgeRestrictedItem * ar = dynamic_cast<AgeRestrictedItem*>(tmp);
     if(ar != NULL) {
         do {
             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                 << "\nEnter the new minmum age for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+                 << "\nEnter the new minmum age for item " << tmp->getItemName() << " " << tmp->getItemCode() << ": ";
             getline(cin, input);
             validIn = ar->setMinAge(input);
             if(!validIn) {
@@ -434,7 +452,7 @@ void promptChangeMinAge(GMItem * itemPtr) {
                 cout << "Enter the new minimum age: ";
                 getline(cin, input);
                 try {
-                    ar = new AgeRestrictedItem(stoi(input), itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
+                    ar = new AgeRestrictedItem(stoi(input), tmp->getItemName(), tmp->getItemPrice(), tmp->getNumOnHand(), tmp->getItemCode());
                     validIn = true;
                 } catch(invalid_argument e) {
                     cout << "Invalid input: " << input;
@@ -442,6 +460,7 @@ void promptChangeMinAge(GMItem * itemPtr) {
             } while (!validIn && input != "exit");
         }
     }
+    delete ar;
 }
 
 
