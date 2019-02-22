@@ -391,7 +391,7 @@ void promptChangeWarning(GMItem * itemPtr) {
         getline(cin, input);
         if(input == "add") {
             do {
-                cout << "Enter the new minimum age: ";
+                cout << "Enter the new warning: ";
                 getline(cin, input);
                 ExpiringItem * newEx = new ExpiringItem;
                 bool testr = newEx->setWarning(input);
@@ -434,7 +434,7 @@ void promptChangeMinAge(GMItem * itemPtr) {
                 cout << "Enter the new minimum age: ";
                 getline(cin, input);
                 try {
-                    validIn = ar = new AgeRestrictedItem(stoi(input), itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
+                    ar = new AgeRestrictedItem(stoi(input), itemPtr->getItemName(), itemPtr->getItemPrice(), itemPtr->getNumOnHand(), itemPtr->getItemCode());
                     validIn = true;
                 } catch(invalid_argument e) {
                     cout << "Invalid input: " << input;
