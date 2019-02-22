@@ -13,7 +13,6 @@
 
 using namespace std;
 using file_status_t = bool;
-using num_items_t = int;
 using total_price_t = double;
 
 
@@ -35,8 +34,8 @@ void performAdminFunctions();
     void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 
 void checkout(); // create a new array of pointers and put the items that you want to check out into it. Program totals the purchase and adds tax, then decreases whatever counts need to be decreased. Uses vector functions for deletion and adding.
-    const int MAX_CART_SIZE = 500;  // I know from working at Wal-Mart that POS systems have built in caps around 400 or 500 so I figured I'd add one.
-    const double TAX_RATE = 0.07; // IL 7.1%
+    const int MAX_CART_SIZE = 500; // I know from working at Wal-Mart that POS systems have built in caps around 400 or 500 so I figured I'd add one.
+    const double TAX_RATE = 0.07;  // IL 7.1%
     void printItemsPOS(vector<GMItem*> items);          // To screen, displays only code, name, and price with periods for spacing, for use in checkout()
     void printPOSPriceSection(vector<GMItem*> items);   // print subtotal, taxes, and total, for use in checkout()
     void printPOSHeader();  
@@ -664,7 +663,7 @@ void checkout() {
                                 numItemsInCart++;
                                 foundItem = true;
                             } else {
-                                cout << "Customer cannot purchase this item." << endl;
+                                cout << "Sale not allowed." << endl;
                             }
                         } else {
                             oss << cart.back()->toStringPOS();
@@ -688,6 +687,8 @@ void checkout() {
         
     } while (codeString != "total" && numItemsInCart < MAX_CART_SIZE);
 }   
+
+
 // Take the array of items and go through it adding all of the prices up and return it as a double
 total_price_t calculateSubtotal(vector<GMItem*> items){
     total_price_t total = 0;
