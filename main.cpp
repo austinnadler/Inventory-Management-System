@@ -215,7 +215,7 @@ void performAdminFunctions() {
                         } else if(input == "5") {
                             promptChangeWarning(inventory, index);
                         } else if(input == "6") {
-                            //promptChangeMinAge(itemPtr);
+                            promptChangeMinAge(inventory, index);
                         } else if (input == "exit") {
                             return;
                         }
@@ -226,7 +226,7 @@ void performAdminFunctions() {
                 found = false;
         } else if(input == "2") {
                 cout << "a. A GMItem with no special characteristics." << endl
-                    << "b. A ExpiringItem with an expiration date to be stored." << endl
+                    << "b. A ExpiringItem with a warning to be stored." << endl
                     << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
                 getline(cin, input);
                 if(input == "a") {
@@ -378,89 +378,47 @@ void promptChangeCode(GMItem * itemPtr) {
 
 
 void promptChangeWarning(vector<GMItem*>& items, const int& index) {
-    string input;
-    bool validIn = false;
-    GMItem * tmp = items.at(index);
-    ExpiringItem * newPtr = nullptr;
-    //More RTTI to check if the item has an expiration before trying to change it.
-    ExpiringItem * ex = dynamic_cast<ExpiringItem*>(items.at(index));
-    if(ex != NULL) {
-        do {
-            cout << "\nEnter 'exit' to quit. Warning should be 20 characters or less." << endl
-                 << "\nEnter the new warning for item " << tmp->getItemName() << " " << tmp->getItemCode() << ": ";
-            getline(cin, input);
-            validIn = ex->setWarning(input);
-            if(!validIn) {
-                cout << "Invalid input: " << input << endl;
-            }
-        } while(!validIn && input != "exit");
-        validIn = false;
-    } else {
-        cout << "\nThis item doesn't have a warning. Warnings must be 20 characters or shorer." << endl
-             << "\nEnter 'add' to add one, or anything else to back out: ";
-        getline(cin, input);
-        if(input == "add") {
-            do {
-                cout << "Enter the new warning (20 characters or less): ";
-                getline(cin, input);
-                
-                validIn = newPtr->setWarning(input);
-                if(validIn) {
-                    string warning = input;
-                    string name = tmp->getItemName();
-                    int numOH = tmp->getNumOnHand();
-                    double price = tmp->getItemPrice();
-                    int code = tmp->getItemCode();
-                    newPtr = new ExpiringItem(warning, name, numOH, price, code);
-                    delete items.at(index);
-                    items.at(index) = newPtr;
-                    delete tmp;
-                } else {
-                    cout << "Invalid input: " << input << endl;
-                }
-            } while (!validIn && input != "exit");
+    string warning;
+    bool valid;
+    ExpiringItem * newPtr = new ExpiringItem();
+    GMItem * tmp = items[index];
+    do {
+        cout << "Enter the new warning for item " << tmp->getItemName() << " - " << tmp->getItemCode() << ": ";
+        getline(cin, warning);
+        valid = newPtr->setWarning(warning);
+        if(valid) {
+            newPtr->setWarning(warning);
+            newPtr->setItemName(tmp->getItemName());
+            newPtr->setItemCode(to_string(tmp->getItemCode()));
+            newPtr->setItemPrice(to_string(tmp->getItemPrice()));
+            newPtr->setNumOnHand(to_string(tmp->getNumOnHand()));
+            delete tmp;
+            items.at(index) = newPtr;
         }
-    }
-    delete ex;
+    } while(!valid && warning != "exit");
 }
 
 
 
 void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
-    string input;
-    bool validIn = false;
-    GMItem * tmp = items.at(index);
-    //More RTTI to check if the item has an expiration before trying to change it.
-    AgeRestrictedItem * ar = dynamic_cast<AgeRestrictedItem*>(tmp);
-    if(ar != NULL) {
-        do {
-            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                 << "\nEnter the new minmum age for item " << tmp->getItemName() << " " << tmp->getItemCode() << ": ";
-            getline(cin, input);
-            validIn = ar->setMinAge(input);
-            if(!validIn) {
-                cout << "Invalid input: " << input << endl;
-            }
-        } while(!validIn && input != "exit");
-    validIn = false;
-    } else {
-        cout << "\nThis item doesn't have a minimum age." << endl
-             << "\nEnter 'add' to add one, or anything else to back out: ";
-        getline(cin, input);
-        if(input == "add") {
-            do {
-                cout << "Enter the new minimum age: ";
-                getline(cin, input);
-                try {
-                    ar = new AgeRestrictedItem(stoi(input), tmp->getItemName(), tmp->getItemPrice(), tmp->getNumOnHand(), tmp->getItemCode());
-                    validIn = true;
-                } catch(invalid_argument e) {
-                    cout << "Invalid input: " << input;
-                }
-            } while (!validIn && input != "exit");
+    string minAge;
+    bool valid;
+    AgeRestrictedItem * newPtr = new AgeRestrictedItem();
+    GMItem * tmp = items[index];
+    do {
+        cout << "Enter the new minimum age for item " << tmp->getItemName() << " - " << tmp->getItemCode() << ": ";
+        getline(cin, minAge);
+        valid = newPtr->setMinAge(minAge);
+        if(valid) {
+            newPtr->setMinAge(minAge);
+            newPtr->setItemName(tmp->getItemName());
+            newPtr->setItemCode(to_string(tmp->getItemCode()));
+            newPtr->setItemPrice(to_string(tmp->getItemPrice()));
+            newPtr->setNumOnHand(to_string(tmp->getNumOnHand()));
+            delete tmp;
+            items.at(index) = newPtr;
         }
-    }
-    delete ar;
+    } while(!valid && minAge != "exit");
 }
 
 
