@@ -12,7 +12,7 @@
                 "main.cpp",
                 "GMItem.cpp",
                 "AgeRestrictedItem.cpp",
-                "ExpiringItem.cpp"
+                "PromptItem.cpp"
             ],
             "group": {
                 "kind": "build",

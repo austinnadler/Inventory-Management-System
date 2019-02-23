@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "GMItem.h"
-#include "ExpiringItem.h"
+#include "PromptItem.h"
 #include "AgeRestrictedItem.h"
 
 using namespace std;
@@ -26,7 +26,7 @@ void performAdminFunctions();
     void promptChangeWarning(vector<GMItem*>& items, const int& index);
     void promptChangeMinAge(vector<GMItem*>& items, const int& index);
     void promptAddGMItem(vector<GMItem*>& items);
-    void promptAddExpiringItem(vector<GMItem*>& items);
+    void promptAddPromptItem(vector<GMItem*>& items);
     void promptAddAgeRestrictedItem(vector<GMItem*>& items);
     void promptDeleteItem(vector <GMItem*> items);
 
@@ -252,13 +252,13 @@ void performAdminFunctions() {
                 found = false;
         } else if(input == "2") {
                 cout << "a. A GMItem with no special characteristics." << endl
-                     << "b. A ExpiringItem with a warning to be stored." << endl
+                     << "b. A PromptItem with a warning to be stored." << endl
                      << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
                 getline(cin, input);
                 if(input == "a") {
                     promptAddGMItem(inventory);
                 } else if (input == "b") {
-                    promptAddExpiringItem(inventory);                    
+                    promptAddPromptItem(inventory);                    
                 } else if(input == "c") {
                     promptAddAgeRestrictedItem(inventory);  
                 }
@@ -403,17 +403,17 @@ void promptChangeCode(GMItem * itemPtr) {
 
 
 
-void promptChangeWarning(vector<GMItem*>& items, const int& index) {
-    string warning;
+void promptChangePrompt(vector<GMItem*>& items, const int& index) {
+    string prompt;
     bool valid;
-    ExpiringItem * newPtr = new ExpiringItem();
+    PromptItem * newPtr = new PromptItem();
     GMItem * tmp = items[index];
     do {
         cout << "Enter the new warning for item " << tmp->getItemName() << " - " << tmp->getItemCode() << ": ";
-        getline(cin, warning);
-        valid = newPtr->setWarning(warning);
+        getline(cin, prompt);
+        valid = newPtr->setWarning(prompt);
         if(valid) {
-            newPtr->setWarning(warning);
+            newPtr->setWarning(prompt);
             newPtr->setItemName(tmp->getItemName());
             newPtr->setItemCode(to_string(tmp->getItemCode()));
             newPtr->setItemPrice(to_string(tmp->getItemPrice()));
@@ -421,7 +421,7 @@ void promptChangeWarning(vector<GMItem*>& items, const int& index) {
             delete tmp;
             items.at(index) = newPtr;
         }
-    } while(!valid && warning != "exit");
+    } while(!valid && prompt != "exit");
 }
 
 
@@ -482,7 +482,7 @@ void promptAddGMItem(vector<GMItem*>& items) {
 
 
 
-void promptAddExpiringItem(vector<GMItem*>& items) {
+void promptAddPromptItem(vector<GMItem*>& items) {
     bool valid;
     string input, code, name, price, numOnHand, warning;
     do {
@@ -506,7 +506,7 @@ void promptAddExpiringItem(vector<GMItem*>& items) {
         cout << "Enter the 20 character maximum warning: ";
         getline(cin, warning);
         try {
-            items.push_back(new ExpiringItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
+            items.push_back(new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
             valid = true;
         } catch (exception e) {
             cout << "One or more arguments were invalid. Try again." << endl;
@@ -736,8 +736,8 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
             getline(ifs, qtyOnHand, ',');
             getline(ifs, code);
 
-            ExpiringItem * ex = new ExpiringItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(ex);
+            PromptItem * pi = new PromptItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
+            items.push_back(pi);
             getline(ifs, itemType, ',');
         } else if (itemType == general) {
             getline(ifs, name, ',');

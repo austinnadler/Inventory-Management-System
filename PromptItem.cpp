@@ -1,13 +1,13 @@
-// File: ExpiringItem.cpp
+// File: PromptItem.cpp
 
-#include "ExpiringItem.h"
+#include "PromptItem.h"
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 using namespace std;
 
-string ExpiringItem::toStringPOS() const {
+string PromptItem::toStringPOS() const {
     ostringstream oss;
     oss << GMItem::toStringPOS();
     return oss.str();
@@ -15,7 +15,7 @@ string ExpiringItem::toStringPOS() const {
 
 
 
-string ExpiringItem::toStringBack() const {
+string PromptItem::toStringBack() const {
     ostringstream oss;
     oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
@@ -23,7 +23,7 @@ string ExpiringItem::toStringBack() const {
 
 
 
-bool ExpiringItem::setWarning(const string& warning) {
+bool PromptItem::setWarning(const string& warning) {
     if(!(warning.length() > MAX_WARNING_LENGTH)) {
         try {
             this -> warning = warning;
@@ -38,15 +38,15 @@ bool ExpiringItem::setWarning(const string& warning) {
 
 
 
-string ExpiringItem::toStringAdmin() const {
+string PromptItem::toStringAdmin() const {
     ostringstream oss;
-    oss << GMItem::toStringAdmin() << " Warning: " << "\"" << getWarning() << "\"";
+    oss << GMItem::toStringAdmin() << " Prompt: " << "\"" << getWarning() << "\"";
     return oss.str();
 }// and toStringAdmin()
 
 
 
-string ExpiringItem::toStringFile() const {
+string PromptItem::toStringFile() const {
     ostringstream oss;
     oss << GMItem::toStringFile() << "," << getWarning();
     return oss.str();
