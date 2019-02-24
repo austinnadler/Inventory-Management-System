@@ -42,18 +42,19 @@ void checkout(); // create a new array of pointers and put the items that you wa
     total_price_t calculateTax(const double& subTotal);
     total_price_t calculateTotal(double& subTotal);
 // FIX: writeItems needs to be updated to print the different types of items in distinct sections.
-// FIX: add something to either verify that item numbers are uniqe, or present user with all of the items with that code and go from there.
+// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
 
 // Testing file reading and writing
 void testFileIOandPricing();
 void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file with a header
 
-// Utilities / Testing:
-void sortItemsByName(vector<GMItem*> items);
-void sortItemsByCode(vector<GMItem*> items);
+// Utilities:
 void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); 
 file_status_t openFileIn(ifstream& ifs, const string& fileName);
 file_status_t openFileOut(ofstream& ofs, const string& fileName);
+
+void sortItemsByName(vector<GMItem*> items);
+void sortItemsByCode(vector<GMItem*> items);
 
 // Default file names to make testing quicker.
 string inFileName = "items.txt";
@@ -910,7 +911,7 @@ void sortItemsByName(vector<GMItem*> items) {
 
 
 
-void sortItemsByCode(vector<GMItem*> items) {
+void sortItems(vector<GMItem*> items) {
     int i, j; 
     GMItem * key;
     for (i = 1; i < items.size(); i++) { 
@@ -922,15 +923,4 @@ void sortItemsByCode(vector<GMItem*> items) {
        } 
        items.at(j+1) = key; 
    } 
-}
-
-
-
-bool addItemToList(vector<GMItem*> items, GMItem * newItem) {
-    if(items.size() == MAX_CART_SIZE) {
-        return false;
-    } else {
-        items.push_back(newItem);
-        return true;
-    }
 }
