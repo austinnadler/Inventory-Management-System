@@ -143,113 +143,129 @@ void performAdminFunctions() {
         
         if(input == "1") {
             // I found it better when testing to not have these as loops to avoid having to restart the program constantly
-            cout << "\nEnter index of the number of the item that you want to edit: ";
-            getline(cin, input);
-            if(input == "exit") {
-                return;
-            } else {
+            // This can easily be changed to accept an item code instead of an index, that was how I had it initially. I changed it when codes got bigger than indexes because I found it easier to use that way.
+            bool validIndex = false;
+            do {
+                cout << "\nEnter index of the item that you want to edit: ";
+                getline(cin, input);
                 try {
-                    GMItem * itemPtr = inventory[stoi(input)];
-                    index = stoi(input);
-                    found = true;
-                    cout << endl 
-                         << "Item found: " << itemPtr->getItemName() << endl << endl
-                         << "1. Change number on hand" << endl
-                         << "2. Change price" << endl
-                         << "3. Change item name" << endl
-                         << "4. Change item code" << endl
-                         << "5. Change item warning prompt" << endl
-                         << "6. Change item minimum age" << endl << endl
-                         << "Enter the number of the action you want to perform: ";    
-                        getline(cin,input);
-
-                        if(input == "exit") {
-                            return;
-                        } else {
-                            if(input == "1") {
-                                string input;
-                                bool validIn = false;
-                                do {
-                                    cout << endl
-                                        << "a. Add to the current count" << endl
-                                        << "b. Subtract from the current count" << endl
-                                        << "c. Enter a completely new count" << endl
-                                        << "Enter the character of the action you want to perform: ";
-                                    getline(cin, input);
-                                
-                                    if(input == "exit") {
-                                        return;
-                                    } else {
-                                        if(input == "a") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                    << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                                                getline(cin, input);
-                                                if(input == "exit") {
-                                                    return;
-                                                } else {
-                                                    validIn = itemPtr->increaseCount(input);
-                                                    if(!validIn) {
-                                                        cout << "Invalid input: " << input << endl;
-                                                    }  
-                                                }
-                                            } while(!validIn);
-                                            validIn = false;
-                                        } else if (input == "b") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                    << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                                                getline(cin, input);
-                                                if(input == "exit") {
-                                                    return;
-                                                } else {
-                                                    validIn = itemPtr->decreaseCount(input);
-                                                    if(!validIn) {
-                                                        cout << "Invalid input: " << input << endl;
-                                                    }
-                                                }
-                                            } while(!validIn);
-                                        validIn = false;     
-                                        } else if(input == "c") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                    << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
-                                                getline(cin, input);
-                                                if(input == "exit") {
-                                                    return;
-                                                } else {
-                                                    validIn = itemPtr->setNumOnHand(input);
-                                                    if(!validIn) {
-                                                        cout << "Invalid input: " << input << endl;
-                                                    }
-                                                }
-                                            } while(!validIn);
-                                        validIn = false;
-                                        } else {
-                                            validIn = false;
-                                        }
-                                    }
-                                } while(!validIn);
-                            } else if(input == "2") {
-                                promptChangePrice(itemPtr);            
-                            } else if(input == "3") {
-                                promptChangeName(itemPtr);
-                            } else if (input == "4") {
-                                promptChangeCode(itemPtr);
-                            } else if(input == "5") {
-                                promptChangePrompt(inventory, index);
-                            } else if(input == "6") {
-                                promptChangeMinAge(inventory, index);
-                            } else if (input == "exit") {
-                                return;
-                            }
-
-                        }
-
-                    } catch (invalid_argument e) {
+                    validIndex = true;
+                    int index = stoi(input);
+                    if(index < 0 || index > inventory.size()) {
+                        cout << "Invalid index: " << input << endl;
+                    }
+                } catch (invalid_argument e) {
+                    if(input == "exit") {
+                        return;
+                    } else {
                         cout << "Invalid input: " << input << endl;
                     }
                 }
+
+            } while(!validIndex);
+
+            try {
+                GMItem * itemPtr = inventory[stoi(input)];
+                index = stoi(input);
+                found = true;
+                cout << endl 
+                     << "Item found: " << itemPtr->getItemName() << endl << endl
+                     << "1. Change number on hand" << endl
+                     << "2. Change price" << endl
+                     << "3. Change item name" << endl
+                     << "4. Change item code" << endl
+                     << "5. Change item warning prompt" << endl
+                     << "6. Change item minimum age" << endl << endl
+                     << "Enter the number of the action you want to perform: ";    
+                    getline(cin,input);
+
+                    if(input == "exit") {
+                        return;
+                    } else {
+                        if(input == "1") {
+                            string input;
+                            bool validIn = false;
+                            do {
+                                cout << endl
+                                     << "a. Add to the current count" << endl
+                                     << "b. Subtract from the current count" << endl
+                                     << "c. Enter a completely new count" << endl
+                                     << "Enter the character of the action you want to perform: ";
+                                getline(cin, input);
+                                
+                                if(input == "exit") {
+                                    return;
+                                } else {
+                                    if(input == "a") {
+                                        do {
+                                            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                                                 << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                                            getline(cin, input);
+                                            if(input == "exit") {
+                                                return;
+                                            } else {
+                                                validIn = itemPtr->increaseCount(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }  
+                                            }
+                                        } while(!validIn);
+                                        validIn = false;
+                                    } else if (input == "b") {
+                                        do {
+                                            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                                                 << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                                            getline(cin, input);
+                                            if(input == "exit") {
+                                                return;
+                                            } else {
+                                                validIn = itemPtr->decreaseCount(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            }
+                                        } while(!validIn);
+                                        validIn = false;     
+                                    } else if(input == "c") {
+                                        do {
+                                            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                                                 << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+                                            getline(cin, input);
+                                            if(input == "exit") {
+                                                return;
+                                            } else {
+                                                validIn = itemPtr->setNumOnHand(input);
+                                                if(!validIn) {
+                                                    cout << "Invalid input: " << input << endl;
+                                                }
+                                            }
+                                        } while(!validIn);
+                                        validIn = false;
+                                    } else {
+                                        validIn = false;
+                                    }
+                                }
+                            } while(!validIn);
+                        } else if(input == "2") {
+                            promptChangePrice(itemPtr);            
+                        } else if(input == "3") {
+                            promptChangeName(itemPtr);
+                        } else if (input == "4") {
+                            promptChangeCode(itemPtr);
+                        } else if(input == "5") {
+                            promptChangePrompt(inventory, index);
+                        } else if(input == "6") {
+                            promptChangeMinAge(inventory, index);
+                        } else if (input == "exit") {
+                               return;
+                        }
+
+                    }
+
+                } catch(invalid_argument e) {
+                        cout << "Invalid input: " << input << endl;
+                }   
+                
                 found = false;
         } else if(input == "2") {
                 cout << "a. A GMItem with no special characteristics." << endl
@@ -267,22 +283,26 @@ void performAdminFunctions() {
             string input;
             bool valid = false;
             do {
-            cout << "Enter the index of them item you want to delete: ";
-            getline(cin, input);
-            try {
-                int index = stoi(input);
-                cout << "Are you sure you want to delete this item from the inventory system?:" << endl
-                    << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-                    << inventory.at(index)->toStringAdmin() << endl
-                    << "Enter 'y' or 'n':";
+                cout << "Enter the index of them item you want to delete: ";
                 getline(cin, input);
-                if(input == "y") {                                  
-                    inventory.erase(inventory.begin() + index);         // vector built in erase 
-                } 
-                valid = true;
-        } catch (invalid_argument e) {
-             cout << "Invalid code entered: " << input;
-        }
+                try {
+                    int index = stoi(input);
+                    if(index < 0 || index > inventory.size()) {
+                        cout << "Invalid index: " << index << endl;
+                    } else {
+                        valid = true;
+                        cout << "Are you sure you want to delete this item from the inventory system?:" << endl
+                            << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
+                            << inventory.at(index)->toStringAdmin() << endl
+                            << "Enter 'y' or 'n':";
+                        getline(cin, input);
+                        if(input == "y") {                                  
+                            inventory.erase(inventory.begin() + index);  // vector built in erase 
+                        } 
+                    }
+                } catch(invalid_argument e) {
+                    cout << "Invalid input: " << input << endl;
+                }
     } while (!valid && input != "exit" && input != "n");
         }
     
