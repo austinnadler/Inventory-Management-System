@@ -414,9 +414,19 @@ void promptChangeCode(GMItem * itemPtr) {
         cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
              << "\nEnter new code for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
-        validIn = itemPtr->setItemCode(input);
-        if(!validIn) {
-            cout << "Invalid input: " << input << endl;
+        try {
+            if(input.length() > 5 || stoi(input) < 0) {
+                cout << "Invalid code: " << input << endl
+                     << "Codes must be positive digits and 5 digits (or shorter)" << endl;
+            } else {
+                validIn = itemPtr->setItemCode(input);
+                if(!validIn) {
+                    cout << "Invalid input: " << input << endl;
+                }
+            }
+        } catch(invalid_argument e) {
+            cout << "Invalid input: " << input << endl
+                 << "Codes must be positive digits and 5 digits (or shorter)";
         }
     } while(!validIn && input != "exit");
     validIn = false;
@@ -426,20 +436,23 @@ void promptChangeCode(GMItem * itemPtr) {
 
 void promptChangePrompt(vector<GMItem*>& items, const int& index) {
     string prompt;
-    bool valid;
+    bool valid = false;
     PromptItem * newPtr = new PromptItem();
-    GMItem * tmp = items[index];
+    PromptItem * prPtr = nullptr;
+    prPtr = dynamic_cast<PromptItem*>(prPtr);
     do {
-        cout << "Enter the new warning for item " << tmp->getItemName() << " - " << tmp->getItemCode() << ": ";
+        cout << "Enter the new warning for item " << items.at(index)->getItemName() << " - " << items.at(index)->getItemCode() << ": ";
         getline(cin, prompt);
         valid = newPtr->setWarning(prompt);
-        if(valid) {
+        if(valid && prPtr == nullptr) {
             newPtr->setWarning(prompt);
-            newPtr->setItemName(tmp->getItemName());
-            newPtr->setItemCode(to_string(tmp->getItemCode()));
-            newPtr->setItemPrice(to_string(tmp->getItemPrice()));
-            newPtr->setNumOnHand(to_string(tmp->getNumOnHand()));
+            newPtr->setItemName(items.at(index)->getItemName());
+            newPtr->setItemCode(to_string(items.at(index)->getItemCode()));
+            newPtr->setItemPrice(to_string(items.at(index)->getItemPrice()));
+            newPtr->setNumOnHand(to_string(items.at(index)->getNumOnHand()));
             items.at(index) = newPtr;
+        } else if(valid && prPtr != nullptr) {
+            valid = prPtr->setWarning(prompt);
         }
     } while(!valid && prompt != "exit");
 }
@@ -448,21 +461,23 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
 
 void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
     string minAge;
-    bool valid;
+    bool valid = false;;
     AgeRestrictedItem * newPtr = new AgeRestrictedItem();
-    GMItem * tmp = items[index];
+    AgeRestrictedItem * arPtr = nullptr;
+    arPtr = dynamic_cast<AgeRestrictedItem*>(arPtr);
     do {
-        cout << "Enter the new minimum age for item " << tmp->getItemName() << " - " << tmp->getItemCode() << ": ";
+        cout << "Enter the new minimum age for item " << items.at(index)->getItemName() << " - " << items.at(index)->getItemCode() << ": ";
         getline(cin, minAge);
         valid = newPtr->setMinAge(minAge);
-        if(valid) {
+        if(valid && arPtr == nullptr) {
             newPtr->setMinAge(minAge);
-            newPtr->setItemName(tmp->getItemName());
-            newPtr->setItemCode(to_string(tmp->getItemCode()));
-            newPtr->setItemPrice(to_string(tmp->getItemPrice()));
-            newPtr->setNumOnHand(to_string(tmp->getNumOnHand()));
-            delete tmp;
+            newPtr->setItemName(items.at(index)->getItemName());
+            newPtr->setItemCode(to_string(items.at(index)->getItemCode()));
+            newPtr->setItemPrice(to_string(items.at(index)->getItemPrice()));
+            newPtr->setNumOnHand(to_string(items.at(index)->getNumOnHand()));
             items.at(index) = newPtr;
+        } else if(valid && arPtr != nullptr) {
+            valid = arPtr->setMinAge(minAge);
         }
     } while(!valid && minAge != "exit");
 }
@@ -599,6 +614,9 @@ void promptDeleteItem(vector<GMItem*> items) {
     } while (!valid && input != "exit");
 }
 
+/**************************************************************************************************************************************/
+/********************************************************* END ADMIN FUNCTION *********************************************************/
+/**************************************************************************************************************************************/
 
 // In checkout, i imagine the code being scanned in from a barcode. When testing, I just have the inventory file open and enter codes from there.
 void checkout() {
@@ -631,14 +649,17 @@ void checkout() {
             return;
         }                        
 
-        cout << "Enter product code (This code should be only numbers.) (Type \"total\" when done entering items): ";
+        cout << "Enter product code (Type 'total' when done entering items): ";
         getline(cin, codeString);
+        // FIX: add else if clause to do returns!
         if(codeString == "total") {
             cout << endl;
             try {
                     printPOSHeader();
                     printItemsPOS(cart);
                     printPOSPriceSection(cart);
+
+                    // Change the on hand quantity.
                     for(int i = 0; i < numItemsInCart; i++) {
                         cart.at(i)->decreaseCount();
                     }
@@ -676,7 +697,7 @@ void checkout() {
                         string input;
                         bool validIn = false;
 
-                        if(ar != NULL) {
+                        if(ar != nullptr) {
                             do {
                                 cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
                                 cout << "Verify customer is at least " << ar->getMinAge() << " years or older (y/n): ";
@@ -695,7 +716,7 @@ void checkout() {
                             } while(!validIn);
                         }
                         
-                        if(pi != NULL) {
+                        if(pi != nullptr) {
                             do {
                                 cout << pi->getWarning() << endl;
                                 cout << "Ackowledge? (y/n): ";
@@ -849,10 +870,6 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     ofs.open(fileName);
     return ofs.is_open();
 }// end openFileOut()
-
-
-// a pos system for selling inventory. 
-//FIX: items are currently removed from inventory as they are added to the list, and not as they are actually sold
 
 
 // print the formatted POS header

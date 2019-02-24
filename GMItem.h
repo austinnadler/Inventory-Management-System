@@ -42,7 +42,7 @@ class GMItem {
         
         virtual int getMaxNameLength() const final  { return MAX_NAME_LENGTH; }//end getMaxNameLength()
 
-        virtual string toStringPOS()   const;
+        virtual string toStringPOS()   const final;
         virtual string toStringAdmin() const;
         virtual string toStringFile()  const;
         virtual string toStringBack()  const; // make a new string in the same format as the input file is read in

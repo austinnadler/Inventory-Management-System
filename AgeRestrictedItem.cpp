@@ -8,14 +8,6 @@
 
 using namespace std;
 
-string AgeRestrictedItem::toStringPOS() const {
-    ostringstream oss;
-    oss << GMItem::toStringPOS();
-    return oss.str();
-}// end toStringPOS()
-
-
-
 string AgeRestrictedItem::toStringBack() const {
     ostringstream oss;
     oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;

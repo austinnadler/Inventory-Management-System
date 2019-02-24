@@ -7,14 +7,6 @@
 #include <iomanip>
 using namespace std;
 
-string PromptItem::toStringPOS() const {
-    ostringstream oss;
-    oss << GMItem::toStringPOS();
-    return oss.str();
-}// end toStringPOS()
-
-
-
 string PromptItem::toStringBack() const {
     ostringstream oss;
     oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;

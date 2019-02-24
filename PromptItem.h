@@ -32,11 +32,8 @@ public:
 
     virtual int getMaxWarningLength()   { return MAX_WARNING_LENGTH; }
     virtual string getWarning() const   { return warning; }//end getExpirationDate()
-
     virtual bool setWarning(const string& warning); // any format, but must be short than 20 characters
 
-    
-    virtual string toStringPOS() const;
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;
     virtual string toStringBack() const;
