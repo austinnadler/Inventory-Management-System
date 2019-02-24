@@ -23,7 +23,7 @@ void performAdminFunctions();
     void promptChangeName(GMItem * itemPtr);
     void promptChangePrice(GMItem * itemPtr);
     void promptChangeCode(GMItem * itemPtr);
-    void promptChangeWarning(vector<GMItem*>& items, const int& index);
+    void promptChangePrompt(vector<GMItem*>& items, const int& index);
     void promptChangeMinAge(vector<GMItem*>& items, const int& index);
     void promptAddGMItem(vector<GMItem*>& items);
     void promptAddPromptItem(vector<GMItem*>& items);
@@ -35,7 +35,7 @@ void performAdminFunctions();
 
 void checkout(); // create a new array of pointers and put the items that you want to check out into it. Program totals the purchase and adds tax, then decreases whatever counts need to be decreased. Uses vector functions for deletion and adding.
     const int MAX_CART_SIZE = 500; // I know from working at Wal-Mart that POS systems have built in caps around 400 or 500 so I figured I'd add one.
-    const double TAX_RATE = 0.07;  // IL 7.1%
+    const double TAX_RATE = 0.071;  // IL 7.1%
     void printItemsPOS(vector<GMItem*> items);          // To screen, displays only code, name, and price with periods for spacing, for use in checkout()
     void printPOSPriceSection(vector<GMItem*> items);   // print subtotal, taxes, and total, for use in checkout()
     void printPOSHeader();  
@@ -128,7 +128,7 @@ void performAdminFunctions() {
 
     loadItemsFromFile(ifs, inventory); 
     do {
-        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the output be controlled by iomanip
+        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
         cout << "----------|------------|---------------------|-----------|--------|--------------" << endl
@@ -236,7 +236,7 @@ void performAdminFunctions() {
                             } else if (input == "4") {
                                 promptChangeCode(itemPtr);
                             } else if(input == "5") {
-                                promptChangeWarning(inventory, index);
+                                promptChangePrompt(inventory, index);
                             } else if(input == "6") {
                                 promptChangeMinAge(inventory, index);
                             } else if (input == "exit") {
@@ -418,7 +418,6 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
             newPtr->setItemCode(to_string(tmp->getItemCode()));
             newPtr->setItemPrice(to_string(tmp->getItemPrice()));
             newPtr->setNumOnHand(to_string(tmp->getNumOnHand()));
-            delete tmp;
             items.at(index) = newPtr;
         }
     } while(!valid && prompt != "exit");
@@ -580,7 +579,7 @@ void promptDeleteItem(vector<GMItem*> items) {
 }
 
 
-// In checkout, i imagine the code being scanned in from a barcode. When testing, I just have the inventory file open.
+// In checkout, i imagine the code being scanned in from a barcode. When testing, I just have the inventory file open and enter codes from there.
 void checkout() {
     ostringstream oss;
     string codeString;
@@ -641,36 +640,64 @@ void checkout() {
                 for(int i = 0; i < inventory.size(); i++) {
                         
                         // FIX: This code does not work
-                        // if (foundItem == false && i == numItems) { 
-                        //     cout << "No item with that code was found in the inventory file." << endl;
-                        // } 
+                        if (foundItem == false && i == inventory.size()) { 
+                            cout << "No item with that code was found in the inventory file." << endl;
+                        } 
 
                     if(code == inventory.at(i)->getItemCode()) {
-                        cart.push_back(inventory.at(i));
-
-                                    // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
+                        
+                        // RTTI Run Time Type Idenification used to determine if the item is age restricted or not and take steps to verify age
 
                         GMItem *gm = inventory.at(i);
+                        // Try to convert to subclass to check type
                         AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
+                        PromptItem *pi = dynamic_cast<PromptItem*>(gm);
+                        string input;
+                        bool validIn = false;
+
                         if(ar != NULL) {
-                        string valid;
-                        cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
-                        cout << "Then enter 'y' if the customer is at least " << ar->getMinAge() << " years or older, or 'n': ";
-                        getline(cin, valid);
-                            if(valid == "y") {
-                                oss << cart.back()->toStringPOS();
-                                subTotal += cart.back()->getItemPrice();
-                                numItemsInCart++;
-                                foundItem = true;
-                            } else {
-                                cout << "Sale not allowed." << endl;
-                            }
-                        } else {
-                            oss << cart.back()->toStringPOS();
-                            subTotal += cart.back()->getItemPrice();
-                            numItemsInCart++;
-                            foundItem = true;
+                            do {
+                                cout << "This is an age restricted item. Verify with a valid photo ID." << endl;
+                                cout << "Verify customer is at least " << ar->getMinAge() << " years or older (y/n): ";
+                                getline(cin, input);
+                                if(input == "y") {
+                                    oss << inventory.at(i)->toStringPOS();
+                                    subTotal += inventory.at(i)->getItemPrice();
+                                    numItemsInCart++;
+                                    cart.push_back(inventory.at(i));
+                                    foundItem = true;
+                                    validIn = true;
+                                } else if(input == "n") {
+                                    cout << "Sale not allowed." << endl;
+                                    validIn = true;
+                                }
+                            } while(!validIn);
                         }
+                        
+                        if(pi != NULL) {
+                            do {
+                                cout << pi->getWarning() << endl;
+                                cout << "Ackowledge? (y/n): ";
+                                getline(cin, input);
+                                if(input == "y") {
+                                    oss << inventory.at(i)->toStringPOS();
+                                    subTotal += inventory.at(i)->getItemPrice();
+                                    numItemsInCart++;
+                                    cart.push_back(inventory.at(i));
+                                    foundItem = true;
+                                    validIn = true;
+                                } else if(input == "n") {
+                                    cout << "Sale not allowed." << endl;
+                                    validIn = true;
+                                }
+                            } while(!validIn);      
+                        }
+                        
+                        
+                        if(ar == NULL && pi == NULL) {
+                            cart.push_back(inventory.at(i));
+                        }
+
                     }                     
                 }
             } catch(exception e) {
