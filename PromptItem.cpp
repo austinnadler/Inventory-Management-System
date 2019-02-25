@@ -7,14 +7,6 @@
 #include <iomanip>
 using namespace std;
 
-string PromptItem::toStringBack() const {
-    ostringstream oss;
-    oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;
-    return oss.str();
-}
-
-
-
 bool PromptItem::setWarning(const string& warning) {
     if(!(warning.length() > MAX_WARNING_LENGTH)) {
         try {
@@ -28,15 +20,17 @@ bool PromptItem::setWarning(const string& warning) {
     }
 }// end setWarning()
 
-
+string PromptItem::toStringBack() const {
+    ostringstream oss;
+    oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}//end toStringBack()
 
 string PromptItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() << " Prompt: " << "\"" << getWarning() << "\"";
     return oss.str();
 }// and toStringAdmin()
-
-
 
 string PromptItem::toStringFile() const {
     ostringstream oss;

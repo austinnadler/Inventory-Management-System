@@ -6,16 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-
 using namespace std;
-
-string GMItem::toStringBack() const {
-    ostringstream oss;
-    oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
-    return oss.str();
-}
-
-
 
 bool GMItem::setItemName(const string& name)  {
     if(!(name.length() > MAX_NAME_LENGTH)) {
@@ -24,9 +15,7 @@ bool GMItem::setItemName(const string& name)  {
     } else {
         return false;
     }
-}
-
-
+}//end setItemName()
 
 bool GMItem::setItemPrice(const string& price){
         try {
@@ -40,9 +29,7 @@ bool GMItem::setItemPrice(const string& price){
             return false;
         }
     
-}
-
-
+}//end setItemPrice()
 
 bool GMItem::setNumOnHand(const string& n) {
     try {
@@ -56,9 +43,7 @@ bool GMItem::setNumOnHand(const string& n) {
          return false;
     }
     
-}
-
-
+}//end setNumOnHand()
 
 bool GMItem::decreaseCount(const string& n) {
     try {
@@ -71,9 +56,7 @@ bool GMItem::decreaseCount(const string& n) {
     } catch (invalid_argument e) {
         return false;
     }
-}
-
-
+}//end decreaseCount()
 
 bool GMItem::increaseCount(const string& n) {
     try {
@@ -86,9 +69,7 @@ bool GMItem::increaseCount(const string& n) {
     } catch (invalid_argument e) {
         return false;
     }
-}
-
-
+}//end increaseCount
 
 bool GMItem::setItemCode(const string& code) {
         try {
@@ -102,15 +83,19 @@ bool GMItem::setItemCode(const string& code) {
             return false;
         }
     
-}
+}//end setItemCode()
 
+string GMItem::toStringBack() const {
+    ostringstream oss;
+    oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}//end toStringBack()
 
 string GMItem::toStringAdmin() const {
     ostringstream oss;
     oss << setw(10) << left << code << " | " << setw(20) << name  << right << "|" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |";
     return oss.str();
 }//end toStringAdmin()
-
 
 string GMItem::toStringFile() const {
     ostringstream oss;

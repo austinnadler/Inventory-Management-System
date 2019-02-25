@@ -5,16 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-
 using namespace std;
-
-string AgeRestrictedItem::toStringBack() const {
-    ostringstream oss;
-    oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
-    return oss.str();
-}
-
-
 
 bool AgeRestrictedItem::setMinAge(const string& minAge) {
     try {
@@ -23,17 +14,19 @@ bool AgeRestrictedItem::setMinAge(const string& minAge) {
     } catch(invalid_argument e) {
         return false;
     }
-}
+}//end setMinAge()
 
-
+string AgeRestrictedItem::toStringBack() const {
+    ostringstream oss;
+    oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
+    return oss.str();
+}//end toStringBack()
 
 string AgeRestrictedItem::toStringAdmin() const {
     ostringstream oss;
     oss << GMItem::toStringAdmin() <<  " Minimum Age: " << right << getMinAge() << " years" ;
     return oss.str();
-}
-
-
+}//end toStringAdmin()
 
 string AgeRestrictedItem::toStringFile() const {
     ostringstream oss;

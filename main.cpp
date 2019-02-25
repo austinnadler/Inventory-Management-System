@@ -575,6 +575,7 @@ void promptDeleteItem(vector<GMItem*> items) {
         }
     } while (!valid && input != "exit");
 }
+
 /*-----------------------------------------------------------*/
 /*------------------------ Utilities ------------------------*/
 /*-----------------------------------------------------------*/
@@ -629,7 +630,6 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
     }
 }// end loadItemsFromFile()
 
-
 void writeItems(ofstream& ofs, vector<GMItem*> items) {
     for(int i = 0; i < items.size(); i++) {
         ofs << items.at(i)->toStringFile() << endl;
@@ -651,18 +651,15 @@ void writeBack(ofstream& ofs, vector<GMItem*> items) {
     ofs.close();
 }// end writeItems()
 
-
 file_status_t openFileIn(ifstream& ifs, const string& fileName) {
     ifs.open(fileName);
     return ifs.is_open();
 }// end openFileIn()
 
-
 file_status_t openFileOut(ofstream& ofs, const string& fileName){
     ofs.open(fileName);
     return ofs.is_open();
 }// end openFileOut()
-
 
 void sortItemsByName(vector<GMItem*> items) {
     int i, j; 
