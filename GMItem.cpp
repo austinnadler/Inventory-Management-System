@@ -76,8 +76,12 @@ bool GMItem::increaseCount(const string& n) {
 
 bool GMItem::setItemCode(const string& code) {
         try {
-            this -> code = stoi(code);
-            return true;
+            if(code.length() > 5 || stoi(code) < 0) {
+                return false;
+            } else {
+                this -> code = stoi(code);
+                return true;
+            }
         } catch (invalid_argument e) {
             return false;
         }
