@@ -21,11 +21,12 @@ public:
         code = copy.code;
         warning = copy.warning; 
     } // end copy ctor
+
     PromptItem(const string& warning = "Check for expiration", 
-                 const string& name = "NA", 
-                 const double& price = 0.0, 
-                 const int& numOnHand = 0, 
-                 const int& code = -1)  
+               const string& name = "NA", 
+               const double& price = 0.0, 
+               const int& numOnHand = 0, 
+               const int& code = -1)  
     :   GMItem(name, price, numOnHand, code), warning(warning)  {}//end ctor
 
     virtual ~PromptItem() {}//end PromptItem()

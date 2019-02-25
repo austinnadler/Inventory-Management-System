@@ -6,49 +6,38 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-
 #include "GMItem.h"
 #include "PromptItem.h"
 #include "AgeRestrictedItem.h"
-
-using namespace std;
 using file_status_t = bool;
 using total_price_t = double;
-
-// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
-// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
-// FIX: add returns to checkout()
-
-// This program can really be broken into two programs: checkout() and performAdminFunctions()
-// performAdminFunctions() and related functions:
 void performAdminFunctions();
-
-void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is seperate to slim down the body of performAdminFunctions()
-void promptChangeName(GMItem * itemPtr);
+/* Loops that call their respective setters when editing items in the inventory system */
+void promptChangeCount(GMItem * itemPtr);
+void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(GMItem * itemPtr);
 void promptChangePrompt(vector<GMItem*>& items, const int& index);
 void promptChangeMinAge(vector<GMItem*>& items, const int& index);
+/* Functions to add items to the inventroy system */
+void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid); //Prompt that all subclasses use first with error trapping
 void promptAddGMItem(vector<GMItem*>& items);
 void promptAddPromptItem(vector<GMItem*>& items);
 void promptAddAgeRestrictedItem(vector<GMItem*>& items);
 void promptDeleteItem(vector <GMItem*> items);
-
 void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
 void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
-
-
-// Utilities:
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); 
-void writeItems(ofstream& ofs, vector<GMItem*> items); // To file, includes expiration, age restrictions, etc. formatted for a csv file with a header
-file_status_t openFileIn(ifstream& ifs, const string& fileName);
-file_status_t openFileOut(ofstream& ofs, const string& fileName);
-void sortItemsByName(vector<GMItem*> items);
-void sortItemsByCode(vector<GMItem*> items);
-
-// Default file names to make testing quicker.
+void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); // Take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, vector<GMItem*> items);  // Take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+file_status_t openFileIn(ifstream& ifs, const string& fileName);// use provided ifstream to open provided filename to read information from
+file_status_t openFileOut(ofstream& ofs, const string& fileName);// use provided ofstream to open provided filename to write data to
+void sortItemsByName(vector<GMItem*> items);// Insertion sort
 string inFileName = "items.csv";
 string outFileName = "itemsOut.csv";
+using namespace std;
+
+// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
+// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
 
 int main() {
     string input;
@@ -222,8 +211,9 @@ int main() {
             found = false;
         } else if(input == "2") {
                 cout << "a. A GMItem with no special characteristics." << endl
-                    << "b. A PromptItem with a warning to be stored." << endl
-                    << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl;
+                     << "b. A PromptItem with a warning to be stored." << endl
+                     << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl
+                     << "Enter the character of your choice: ";
                 getline(cin, input);
                 if(input == "a") {
                     promptAddGMItem(inventory);
@@ -278,13 +268,15 @@ int main() {
     return 0;
 }// end main()
 
-/*------------------------ User actions ------------------------ */
+/*--------------------------------------------------------------*/
+/*------------------------ User Actions ------------------------*/
+/*--------------------------------------------------------------*/
 
 void promptChangeName(GMItem * itemPtr) {
     string input;
     bool valid = false;
     do {
-        cout << "\nEnter 'exit' to quit. The name can be anything 20 characters or less." << endl
+        cout << "\nEnter 'exit' to quit. The name can be anything " << itemPtr->getMaxNameLength() << " characters or less." << endl
              << "\nEnter the new item namefor item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
         if(input == "exit") {
@@ -313,6 +305,7 @@ void promptChangePrice(GMItem * itemPtr) {
         } while(!valid && input != "exit");
         valid = false;  
 }
+
 void promptChangeCount(GMItem * itemPtr) {
     string input;
     bool valid = false;
@@ -362,26 +355,15 @@ void promptChangeCode(GMItem * itemPtr) {
     string input;
     bool valid = false;
     do {
-        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+        cout << "\nEnter 'exit' to quit. Codes must be " << itemPtr->getMaxCodeDigits() << " digits or shorter." << endl
              << "\nEnter new code for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
         if(input == "exit") {
             valid = true;
         } else {
-            try {
-                valid = itemPtr->setItemCode(input);
-                if(!valid) {
-                    cout << "Invalid code: " << input << endl
-                        << "Codes must be positive digits and 5 digits (or shorter)" << endl;
-                } else {
-                    valid = itemPtr->setItemCode(input);
-                    if(!valid) {
-                        cout << "Invalid input: " << input << endl;
-                    }
-                }
-            } catch(invalid_argument e) {
-                cout << "Invalid input: " << input << endl
-                    << "Codes must be positive digits and 5 digits (or shorter)";
+            valid = itemPtr->setItemCode(input);
+            if(!valid) {
+                cout << "Invalid input: " << input << endl;
             }
         }
     } while(!valid);
@@ -397,7 +379,7 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
         cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
         if(input == "a" || input == "c") {
-            cout << "Warning prompts must be 20 characters or shorter." << endl
+            cout << "Warning prompts must be " << newPtr->getMaxWarningLength() << " characters or shorter." << endl
                  << "Enter the new warning for item " << items.at(index)->getItemName() << " - " << items.at(index)->getItemCode() << ": ";
             getline(cin, input);
             if(input == "exit") {
@@ -467,105 +449,106 @@ void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
     } while(!valid);
 }
 
-void promptAddGMItem(vector<GMItem*>& items) {
-    bool valid;
-    string input, code, name, price, numOnHand;
+void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid) {
+    string input;
+    GMItem * testptr = new GMItem();
+    
     do {
-        cout << "\nEnter item information as follows: " << endl
-             << "\nEnter the code or 'exit' to back out (only chance, after inputting name you have to finish or restart the program.): ";
+        cout << "Enter the code (" << testptr->CODE_MAX_DIGITS << " digits or less): ";
         getline(cin, input);
-        code = input;
-        input = "";
-        cout << "Enter the name: ";
-        getline(cin, input);
-        if(input == "exit") { valid = true; }
-        name = input;
-        input = "";
-        cout << "Enter the quantity on hand: ";
-        getline(cin, input);
-        numOnHand = input;
-        input = "";
-        cout << "Enter the price: ";
-        getline(cin, input);
-        price = input;
-        input = "";
-        try {
-            items.push_back(new GMItem(name, stod(price), stoi(numOnHand), stoi(code)));
-            valid = true;
-        } catch (invalid_argument e) {
-            cout << "One or more arguments were invalid. Try again." << endl;
-            valid = false;
+        valid = testptr->setItemCode(input);
+        if(valid) {
+            code = input;
         }
-    } while(!valid);    
+    } while(!valid);
+    valid = false;
+
+    do {
+        cout << "Enter the name ("  << testptr->MAX_NAME_LENGTH << " characters or less): ";
+        getline(cin, input);
+        valid = testptr->setItemName(input);
+        if(valid) {
+            name = input;
+        }
+    } while(!valid);
+    valid = false;
+    
+    do {
+        cout << "Enter the quantity on hand (postive integers only): ";
+        getline(cin, input);
+        valid = testptr->setNumOnHand(input);
+        if(valid) {
+            numOnHand = input;
+        }
+    } while(!valid);
+
+    do {
+        cout << "Enter the price (postive integers or decimal numbers only): ";
+        getline(cin, input);
+        valid = testptr->setItemPrice(input);
+        if(valid) {
+            price = input;
+        }
+    } while(!valid);     
+
+    
+    delete testptr;
+}
+
+void promptAddGMItem(vector<GMItem*>& items) {
+    bool valid = false;
+    string code, name, price, numOnHand;
+    promptGeneralPrompt(code, name, price, numOnHand, valid);
+    GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
+    items.push_back(newPtr);
 }
 
 void promptAddPromptItem(vector<GMItem*>& items) {
-    bool valid;
-    string input, code, name, price, numOnHand, warning;
+    bool valid = false;
+    string code, name, price, numOnHand, warning;
+    PromptItem * testptr = new PromptItem();
+    
     do {
-        cout << "Enter item information as follows: " << endl
-             << "Enter the code or 'exit' to back out (only chance, after inputting name you have to finish or restart the program.): ";
-        getline(cin, input);
-        if(input == "exit") { valid = true; }
-        code = input;
-        input = "";
-        cout << "Enter the name: ";
-        getline(cin, input);
-        name = input;
-        input = "";
-        cout << "Enter the quantity on hand: ";
-        getline(cin, input);
-        numOnHand = input;
-        input = "";
-        cout << "Enter the price: ";
-        getline(cin, input);
-        price = input;
-        input = "";
+        promptGeneralPrompt(code, name, price, numOnHand, valid);
         cout << "Enter the 20 character maximum warning: ";
         getline(cin, warning);
-        try {
-            items.push_back(new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code)));
-            valid = true;
-        } catch (exception e) {
-            cout << "One or more arguments were invalid. Try again." << endl;
-            valid = false;
+        valid = testptr->setWarning(warning);
+        if (valid) {
+            try {
+                PromptItem * newPtr = new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code));
+                items.push_back(newPtr);
+                valid = true;
+            } catch (invalid_argument e) {
+                cout << "One or more arguments were invalid. Try again." << endl;
+                valid = false;
+            }
         }
     } while(!valid);           
+    delete testptr;
 }
 
 void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
-    bool valid;
-    string input, code, name, price, numOnHand, minAge;
+    bool valid = false;
+    string code, name, price, numOnHand, minAge;
+    AgeRestrictedItem * testptr = new AgeRestrictedItem();
+    
     do {
-        cout << "Enter item information as follows: " << endl;
-        cout << "Enter the code: ";
-        getline(cin, input);
-        code = input;
-        input = "";
-        cout << "Enter the name: ";
-        getline(cin, input);
-        name = input;
-        input = "";
-        cout << "Enter the quantity on hand: ";
-        getline(cin, input);
-        numOnHand = input;
-        input = "";
-        cout << "Enter the price: ";
-        getline(cin, input);
-        price = input;
-        input = "";
-        cout << "Enter the minimum age: ";
-        getline(cin, input);
-        minAge = input;
-        input = "";
-        try {
-            items.push_back(new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code)));
-            valid = true;
-        } catch (exception e) {
-            cout << "One or more arguments were invalid. Try again." << endl;
-            valid = false;
+        promptGeneralPrompt(code, name, price, numOnHand, valid);
+        cout << "Enter the new minimum age: ";
+        getline(cin, minAge);
+        valid = testptr->setMinAge(minAge);
+        if (valid) {
+            try {
+                AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
+                items.push_back(newPtr);
+                valid = true;
+            } catch (invalid_argument e) {
+                cout << "One or more arguments were invalid. Try again." << endl;
+                valid = false;
+            }
         }
-    } while(!valid);  
+    } while(!valid);           
+    delete testptr;
 }
 
 void promptDeleteItem(vector<GMItem*> items) {
@@ -592,10 +575,10 @@ void promptDeleteItem(vector<GMItem*> items) {
         }
     } while (!valid && input != "exit");
 }
-
+/*-----------------------------------------------------------*/
 /*------------------------ Utilities ------------------------*/
+/*-----------------------------------------------------------*/
 
-// Take an ifs and an empty array and fill said array with items from a FORMATTED file
 void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
     string itemType;
     string name;
@@ -646,13 +629,20 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
     }
 }// end loadItemsFromFile()
 
-// Take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+
 void writeItems(ofstream& ofs, vector<GMItem*> items) {
     for(int i = 0; i < items.size(); i++) {
         ofs << items.at(i)->toStringFile() << endl;
     }
     ofs.close();
 }// end writeBack()
+
+void printAdminInfo(vector<GMItem*> items) {
+     for(int i = 0; i < items.size(); i++) {
+        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
+        cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
+    }
+}
 
 void writeBack(ofstream& ofs, vector<GMItem*> items) {
     for(int i = 0; i < items.size(); i++) {
@@ -661,19 +651,19 @@ void writeBack(ofstream& ofs, vector<GMItem*> items) {
     ofs.close();
 }// end writeItems()
 
-// use provided ifstream to open provided filename to read information from
+
 file_status_t openFileIn(ifstream& ifs, const string& fileName) {
     ifs.open(fileName);
     return ifs.is_open();
 }// end openFileIn()
 
-// use provided ofstream to open provided filename to write data to
+
 file_status_t openFileOut(ofstream& ofs, const string& fileName){
     ofs.open(fileName);
     return ofs.is_open();
 }// end openFileOut()
 
-// Insertion sort used 
+
 void sortItemsByName(vector<GMItem*> items) {
     int i, j; 
     GMItem * key;

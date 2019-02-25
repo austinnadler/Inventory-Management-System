@@ -13,6 +13,7 @@ class GMItem {
 
     public:
         const int MAX_NAME_LENGTH = 20; // Name can be 20 characters long, or the method will return false. This is hard coded in error statements be
+        const int CODE_MAX_DIGITS = 5;
 
         GMItem(const string& name = "N/A", 
                const double& price = 0.0,
@@ -36,6 +37,7 @@ class GMItem {
         virtual int getNumOnHand()     const final  { return numOnHand; }//end getNumOnHand()
         
         virtual int getMaxNameLength() const final  { return MAX_NAME_LENGTH; }//end getMaxNameLength()
+        virtual int getMaxCodeDigits() const final  { return CODE_MAX_DIGITS; }//end getMaxCodeDigits()
 
         virtual string toStringAdmin() const;
         virtual string toStringFile()  const;

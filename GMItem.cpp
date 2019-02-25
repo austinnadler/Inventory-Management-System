@@ -30,8 +30,12 @@ bool GMItem::setItemName(const string& name)  {
 
 bool GMItem::setItemPrice(const string& price){
         try {
-            this -> price = stod(price);
-            return true;
+            if(stod(price) < 0) {
+                return false;
+            } else {
+                this -> price = stod(price);
+                return true; 
+            } 
         } catch (invalid_argument e) {
             return false;
         }
@@ -42,8 +46,12 @@ bool GMItem::setItemPrice(const string& price){
 
 bool GMItem::setNumOnHand(const string& n) {
     try {
-        this -> numOnHand = stoi(n);
-        return true;
+        if(stoi(n) < 0) {
+                return false;
+        } else {
+            this -> numOnHand = stoi(n);
+            return true;
+        }
     } catch (invalid_argument e) {
          return false;
     }
@@ -54,8 +62,12 @@ bool GMItem::setNumOnHand(const string& n) {
 
 bool GMItem::decreaseCount(const string& n) {
     try {
-        this -> numOnHand -= stoi(n);
-        return true;
+        if(stoi(n) < 0) {
+            return false;
+        } else {
+            this -> numOnHand -= stoi(n);
+            return true;
+        }
     } catch (invalid_argument e) {
         return false;
     }
@@ -65,8 +77,12 @@ bool GMItem::decreaseCount(const string& n) {
 
 bool GMItem::increaseCount(const string& n) {
     try {
-        this -> numOnHand += stoi(n);
-        return true;
+        if(stoi(n) < 0) {
+            return false;
+        } else {
+            this -> numOnHand += stoi(n);
+            return true;
+        }
     } catch (invalid_argument e) {
         return false;
     }
