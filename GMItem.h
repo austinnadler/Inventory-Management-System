@@ -44,6 +44,4 @@ class GMItem {
         virtual string toStringBack()  const; // make a new string in the same format as the input file is read in
 };
 
-ostream& operator <<(ostream& os, const GMItem& o);
-
 #endif

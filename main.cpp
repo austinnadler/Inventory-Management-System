@@ -18,7 +18,7 @@ void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(vector<GMItem*>& inventory, GMItem * item);
-bool isCodeTaken(vector<GMItem*>& inventory, const int& code);      // Custom binary search and linear search combination. 
+bool isCodeTaken(vector<GMItem*>& inventory, const int& code);    
 // FIX: Plan to impliment full binary search at some point.
 void promptChangePrompt(vector<GMItem*>& items, const int& index);
 void promptChangeMinAge(vector<GMItem*>& items, const int& index);
@@ -29,14 +29,14 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
 void promptAddGMItem(vector<GMItem*>& items);
 void promptAddPromptItem(vector<GMItem*>& items);
 void promptAddAgeRestrictedItem(vector<GMItem*>& items);
-void promptDeleteItem(vector <GMItem*> items);                      
-void writeBack(ofstream& ofs, vector<GMItem*> items);               // writes to a new file with the same format as the example input file so it can be re-used.
-void printAdminInfo(vector<GMItem*> items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items);      // take an ifs and an empty array and fill said array with items from a FORMATTED file
-void writeItems(ofstream& ofs, vector<GMItem*> items);              // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void promptDeleteItem(vector <GMItem*>& items);                      
+void writeBack(ofstream& ofs, vector<GMItem*>& items);               // writes to a new file with the same format as the example input file so it can be re-used.
+void printAdminInfo(vector<GMItem*>& items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items);      // take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, vector<GMItem*>& items);              // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void sort(vector<GMItem*>& items);
 file_status_t openFileIn(ifstream& ifs, const string& fileName);    // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);   // use provided ofstream to open provided filename to write data to
-void sortItemsByCode(vector<GMItem*> items);                        // Insertion sort
 string inFileName = "items.csv";
 string outFileName = "itemsOut.csv";
 using namespace std;
@@ -66,6 +66,7 @@ int main() {
     }
 
     loadItemsFromFile(ifs, inventory); 
+    sort(inventory);
     do {
         //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
@@ -361,7 +362,6 @@ void promptChangeCode(vector<GMItem*>& inventory, GMItem * item) {
     bool isTaken = true;
     bool allGood = false;
     GMItem * tmp = new GMItem(); // Test with new item for safety
-
     do {
         do {
             cout << "Enter the new item code. This must be " << item->CODE_MAX_DIGITS <<  " digits or shorter: ";
@@ -597,7 +597,7 @@ void promptDeleteItem(vector<GMItem*> items) {
 /*------------------------ Utilities ------------------------*/
 /*-----------------------------------------------------------*/
 
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
+void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items) {
     string itemType;
     string name;
     string price;
@@ -647,21 +647,21 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items) {
     }
 }// end loadItemsFromFile()
 
-void writeItems(ofstream& ofs, vector<GMItem*> items) {
+void writeItems(ofstream& ofs, vector<GMItem*>& items) {
     for(int i = 0; i < items.size(); i++) {
         ofs << items.at(i)->toStringFile() << endl;
     }
     ofs.close();
 }// end writeBack()
 
-void printAdminInfo(vector<GMItem*> items) {
+void printAdminInfo(vector<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
         cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
         cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
     }
 }
 
-void writeBack(ofstream& ofs, vector<GMItem*> items) {
+void writeBack(ofstream& ofs, vector<GMItem*>& items) {
     for(int i = 0; i < items.size(); i++) {
         ofs << items.at(i)->toStringBack() << endl;
     }
@@ -678,50 +678,17 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     return ofs.is_open();
 }// end openFileOut()
 
-void sortItemsByCode(vector<GMItem*> items) {
-    int i, j; 
-    GMItem * key;
-    for (i = 1; i < items.size(); i++) { 
-       key = items.at(i); 
-       j = i-1; 
-       while (j >= 0 && items.at(i)->getItemCode() > key->getItemCode()) { 
-           items.at(i+1) = items.at(j); 
-           j = j-1; 
-       } 
-       items.at(j+1) = key; 
-   } 
-}
-
-bool isCodeTaken(vector<GMItem*>& items, const int& code) {
-
-    int leftIndex = 0;
-    int rightIndex = items.size() - 1;
-    int midIndex = (items.size() / 2);
-
-    int leftCode = items.at(leftIndex)->getItemCode();
-    int rightCode = items.at(rightIndex)->getItemCode();
-    int midCode = items.at(midIndex)->getItemCode();
-
-    if(code == leftCode) {
-        return true;
-    } else if(code == rightCode) {
-        return true; 
-    } else if(code == midCode) {
-        return true;
-    } else if(code > leftCode && code < midCode) {
-        for(int i = leftIndex; i < midIndex; i++) {
-            if(items.at(i)->getItemCode() == code) {
-                return true;
-            }
-        }
-    }else if(code > midCode && code < rightCode) {
-        for(int i = midIndex; i < midIndex; i++) {
-            if(items.at(i)->getItemCode() == code) {
-                return true;
-            }
+bool isCodeTaken(vector<GMItem*>& items, const int& code) { 
+    for(int i = 0; i < items.size(); i++) {
+        if(items.at(i)->getItemCode() == code) {
+            return true;
         }
     }
-   
-   return false;
+    return false;
+}//end isCodeTaken()
 
+void sort(vector<GMItem*>& items) {
+    sort(items.begin(), items.end(), [](const GMItem* lhs, const GMItem* rhs) {
+        return lhs->getItemCode() < rhs->getItemCode();
+    });
 }
