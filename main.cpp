@@ -23,19 +23,19 @@ using total_price_t = double;
 // performAdminFunctions() and related functions:
 void performAdminFunctions();
 
-    void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is seperate to slim down the body of performAdminFunctions()
-    void promptChangeName(GMItem * itemPtr);
-    void promptChangePrice(GMItem * itemPtr);
-    void promptChangeCode(GMItem * itemPtr);
-    void promptChangePrompt(vector<GMItem*>& items, const int& index);
-    void promptChangeMinAge(vector<GMItem*>& items, const int& index);
-    void promptAddGMItem(vector<GMItem*>& items);
-    void promptAddPromptItem(vector<GMItem*>& items);
-    void promptAddAgeRestrictedItem(vector<GMItem*>& items);
-    void promptDeleteItem(vector <GMItem*> items);
+void promptChangeCount(GMItem * itemPtr);             // The interface for these functions is seperate to slim down the body of performAdminFunctions()
+void promptChangeName(GMItem * itemPtr);
+void promptChangePrice(GMItem * itemPtr);
+void promptChangeCode(GMItem * itemPtr);
+void promptChangePrompt(vector<GMItem*>& items, const int& index);
+void promptChangeMinAge(vector<GMItem*>& items, const int& index);
+void promptAddGMItem(vector<GMItem*>& items);
+void promptAddPromptItem(vector<GMItem*>& items);
+void promptAddAgeRestrictedItem(vector<GMItem*>& items);
+void promptDeleteItem(vector <GMItem*> items);
 
-    void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
-    void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
+void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
 
 
 // Utilities:

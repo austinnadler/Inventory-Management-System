@@ -89,15 +89,6 @@ bool GMItem::setItemCode(const string& code) {
 }
 
 
-
-string GMItem::toStringPOS() const {
-    ostringstream oss;
-    oss << left << code << "\t" << setw(25) << setfill('.') << name << fixed << setprecision(2) << price;
-    return oss.str();
-}// end toStringPOS()
-
-
-
 string GMItem::toStringAdmin() const {
     ostringstream oss;
     oss << setw(10) << left << code << " | " << setw(20) << name  << right << "|" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |";
