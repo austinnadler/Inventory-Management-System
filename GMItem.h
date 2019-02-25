@@ -9,7 +9,7 @@ class GMItem {
         string name;
         double price;
         int numOnHand;
-        int code; // A 5 digit code. FIX: Currently, if there were multiple items with the same code entered into the system, only the lower indexed one will be found in ALL functions.
+        int code; // 5 digit (or less) code
 
     public:
         const int MAX_NAME_LENGTH = 20; // Name can be 20 characters long, or the method will return false. This is hard coded in error statements be

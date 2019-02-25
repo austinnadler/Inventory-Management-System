@@ -15,6 +15,9 @@ using namespace std;
 using file_status_t = bool;
 using total_price_t = double;
 
+// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
+// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
+// FIX: add returns to checkout()
 
 // This program can really be broken into two programs: checkout() and performAdminFunctions()
 // performAdminFunctions() and related functions:
@@ -41,8 +44,7 @@ void checkout(); // create a new array of pointers and put the items that you wa
     void printPOSHeader();  
     total_price_t calculateTax(const double& subTotal);
     total_price_t calculateTotal(double& subTotal);
-// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
-// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
+
 
 // Testing file reading and writing
 void testFileIOandPricing();
@@ -184,7 +186,7 @@ void performAdminFunctions() {
                     } else {
                         if(input == "1") {
                             string input;
-                            bool validIn = false;
+                            bool valid = false;
                             do {
                                 cout << endl
                                      << "a. Add to the current count" << endl
@@ -204,13 +206,13 @@ void performAdminFunctions() {
                                             if(input == "exit") {
                                                 return;
                                             } else {
-                                                validIn = itemPtr->increaseCount(input);
-                                                if(!validIn) {
+                                                valid = itemPtr->increaseCount(input);
+                                                if(!valid) {
                                                     cout << "Invalid input: " << input << endl;
                                                 }  
                                             }
-                                        } while(!validIn);
-                                        validIn = false;
+                                        } while(!valid);
+                                        valid = false;
                                     } else if (input == "b") {
                                         do {
                                             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
@@ -219,13 +221,13 @@ void performAdminFunctions() {
                                             if(input == "exit") {
                                                 return;
                                             } else {
-                                                validIn = itemPtr->decreaseCount(input);
-                                                if(!validIn) {
+                                                valid = itemPtr->decreaseCount(input);
+                                                if(!valid) {
                                                     cout << "Invalid input: " << input << endl;
                                                 }
                                             }
-                                        } while(!validIn);
-                                        validIn = false;     
+                                        } while(!valid);
+                                        valid = false;     
                                     } else if(input == "c") {
                                         do {
                                             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
@@ -234,18 +236,18 @@ void performAdminFunctions() {
                                             if(input == "exit") {
                                                 return;
                                             } else {
-                                                validIn = itemPtr->setNumOnHand(input);
-                                                if(!validIn) {
+                                                valid = itemPtr->setNumOnHand(input);
+                                                if(!valid) {
                                                     cout << "Invalid input: " << input << endl;
                                                 }
                                             }
-                                        } while(!validIn);
-                                        validIn = false;
+                                        } while(!valid);
+                                        valid = false;
                                     } else {
-                                        validIn = false;
+                                        valid = false;
                                     }
                                 }
-                            } while(!validIn);
+                            } while(!valid);
                         } else if(input == "2") {
                             promptChangePrice(itemPtr);            
                         } else if(input == "3") {
@@ -328,7 +330,7 @@ void performAdminFunctions() {
 
 void promptChangeCount(GMItem * itemPtr) {
     string input;
-    bool validIn = false;
+    bool valid = false;
     cout << endl
          << "a. Add to the current count" << endl
          << "b. Subtract from the current count" << endl
@@ -340,34 +342,34 @@ void promptChangeCount(GMItem * itemPtr) {
             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
                  << "\nIncrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
             getline(cin, input);
-            validIn = itemPtr->increaseCount(input);
-            if(!validIn) {
+            valid = itemPtr->increaseCount(input);
+            if(!valid) {
                 cout << "Invalid input: " << input << endl;
             }
-        } while(!validIn && input != "exit");
-    validIn = false;
+        } while(!valid && input != "exit");
+    valid = false;
     } else if (input == "b") {
         do {
             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
                  << "\nDecrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
             getline(cin, input);
-            validIn = itemPtr->decreaseCount(input);
-            if(!validIn) {
+            valid = itemPtr->decreaseCount(input);
+            if(!valid) {
                 cout << "Invalid input: " << input << endl;
             }
-        } while(!validIn && input != "exit");
-    validIn = false;     
+        } while(!valid && input != "exit");
+    valid = false;     
     } else if(input == "c") {
         do {
             cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
                  << "\nEnter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
             getline(cin, input);
-            validIn = itemPtr->setNumOnHand(input);
-            if(!validIn) {
+            valid = itemPtr->setNumOnHand(input);
+            if(!valid) {
                 cout << "Invalid input: " << input << endl;
             }
-        } while(!validIn && input != "exit");
-    validIn = false;
+        } while(!valid && input != "exit");
+    valid = false;
     }
 }
 
@@ -375,60 +377,60 @@ void promptChangeCount(GMItem * itemPtr) {
 
 void promptChangePrice(GMItem * itemPtr) {
     string input;
-    bool validIn = false;
+    bool valid = false;
     do {
         cout << "Enter an integer or decimal value (e.g. 5, or 4.99)" << endl
              << "\nEnter 'exit' to quit." << endl
              << "\nEnter the new price for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
-        validIn = itemPtr->setItemPrice(input);
-            if(!validIn) {
+        valid = itemPtr->setItemPrice(input);
+            if(!valid) {
                 cout << "Invalid input: " << input << endl;
             }
-        } while(!validIn && input != "exit");
-        validIn = false;  
+        } while(!valid && input != "exit");
+        valid = false;  
 }
 
 
 
 void promptChangeName(GMItem * itemPtr) {
     string input;
-    bool validIn = false;
+    bool valid = false;
     do {
         cout << "\nEnter 'exit' to quit. The name can be anything 20 characters or less." << endl
              << "\nEnter the new item namefor item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
         if(input == "exit") {
-            validIn = true;
+            valid = true;
         } else {
-            validIn = itemPtr->setItemName(input);
-            if(!validIn) {
+            valid = itemPtr->setItemName(input);
+            if(!valid) {
                 cout << "Invalid input: " << input << endl;
             }
         }
-    } while(!validIn);
+    } while(!valid);
 }
 
 
 
 void promptChangeCode(GMItem * itemPtr) {
     string input;
-    bool validIn = false;
+    bool valid = false;
     do {
         cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
              << "\nEnter new code for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
         if(input == "exit") {
-            validIn = true;
+            valid = true;
         } else {
             try {
-                validIn = itemPtr->setItemCode(input);
-                if(!validIn) {
+                valid = itemPtr->setItemCode(input);
+                if(!valid) {
                     cout << "Invalid code: " << input << endl
                         << "Codes must be positive digits and 5 digits (or shorter)" << endl;
                 } else {
-                    validIn = itemPtr->setItemCode(input);
-                    if(!validIn) {
+                    valid = itemPtr->setItemCode(input);
+                    if(!valid) {
                         cout << "Invalid input: " << input << endl;
                     }
                 }
@@ -437,7 +439,7 @@ void promptChangeCode(GMItem * itemPtr) {
                     << "Codes must be positive digits and 5 digits (or shorter)";
             }
         }
-    } while(!validIn);
+    } while(!valid);
 }
 
 
@@ -739,7 +741,7 @@ void checkout() {
                         AgeRestrictedItem *ar = dynamic_cast<AgeRestrictedItem*>(gm);
                         PromptItem *pi = dynamic_cast<PromptItem*>(gm);
                         string input;
-                        bool validIn = false;
+                        bool valid = false;
 
                         if(ar != nullptr) {
                             do {
@@ -752,12 +754,12 @@ void checkout() {
                                     numItemsInCart++;
                                     cart.push_back(inventory.at(i));
                                     foundItem = true;
-                                    validIn = true;
+                                    valid = true;
                                 } else if(input == "n") {
                                     cout << "Sale not allowed." << endl;
-                                    validIn = true;
+                                    valid = true;
                                 }
-                            } while(!validIn);
+                            } while(!valid);
                         }
                         
                         if(pi != nullptr) {
@@ -771,12 +773,12 @@ void checkout() {
                                     numItemsInCart++;
                                     cart.push_back(inventory.at(i));
                                     foundItem = true;
-                                    validIn = true;
+                                    valid = true;
                                 } else if(input == "n") {
                                     cout << "Sale not allowed." << endl;
-                                    validIn = true;
+                                    valid = true;
                                 }
-                            } while(!validIn);      
+                            } while(!valid);      
                         }
                         
                         
