@@ -11,33 +11,37 @@
 #include "AgeRestrictedItem.h"
 using file_status_t = bool;
 using total_price_t = double;
-void performAdminFunctions();
+
 /* Loops that call their respective setters when editing items in the inventory system */
+/* Created to simplify the main method                                                 */
 void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
-void promptChangeCode(GMItem * itemPtr);
+void promptChangeCode(vector<GMItem*>& inventory, GMItem * item);
+bool isCodeTaken(vector<GMItem*>& inventory, const int& code);      // Custom binary search and linear search combination. 
+// FIX: Plan to impliment full binary search at some point.
 void promptChangePrompt(vector<GMItem*>& items, const int& index);
 void promptChangeMinAge(vector<GMItem*>& items, const int& index);
-/* Functions to add items to the inventroy system */
+
+/* Functions to add items to the inventory system */
+/* Created to simplify the main method            */
 void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid); //Prompt that all subclasses use first with error trapping
 void promptAddGMItem(vector<GMItem*>& items);
 void promptAddPromptItem(vector<GMItem*>& items);
 void promptAddAgeRestrictedItem(vector<GMItem*>& items);
-void promptDeleteItem(vector <GMItem*> items);
-void writeBack(ofstream& ofs, vector<GMItem*> items); // writes to a new file with the same format as the example input file so it can be re-used.
-void printAdminInfo(vector<GMItem*> items);           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items); // Take an ifs and an empty array and fill said array with items from a FORMATTED file
-void writeItems(ofstream& ofs, vector<GMItem*> items);  // Take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
-file_status_t openFileIn(ifstream& ifs, const string& fileName);// use provided ifstream to open provided filename to read information from
-file_status_t openFileOut(ofstream& ofs, const string& fileName);// use provided ofstream to open provided filename to write data to
-void sortItemsByName(vector<GMItem*> items);// Insertion sort
+void promptDeleteItem(vector <GMItem*> items);                      
+void writeBack(ofstream& ofs, vector<GMItem*> items);               // writes to a new file with the same format as the example input file so it can be re-used.
+void printAdminInfo(vector<GMItem*> items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void loadItemsFromFile(ifstream& ifs, vector<GMItem*> &items);      // take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, vector<GMItem*> items);              // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+file_status_t openFileIn(ifstream& ifs, const string& fileName);    // use provided ifstream to open provided filename to read information from
+file_status_t openFileOut(ofstream& ofs, const string& fileName);   // use provided ofstream to open provided filename to write data to
+void sortItemsByCode(vector<GMItem*> items);                        // Insertion sort
 string inFileName = "items.csv";
 string outFileName = "itemsOut.csv";
 using namespace std;
 
-// FIX: writeItems needs to be updated to print the different types of items in distinct sections.
-// FIX: add something to either verify that item numbers are unique, or present user with all of the items with that code and go from there.
+// FIX: writeItems needs to be updated to print the different types of items in different files, and then the lod files function should do the same
 
 int main() {
     string input;
@@ -186,7 +190,7 @@ int main() {
                         } else if(input == "3") {
                             promptChangeName(itemPtr);
                         } else if (input == "4") {
-                            promptChangeCode(itemPtr);
+                            promptChangeCode(inventory, itemPtr);
                         } else if(input == "5") {
                             promptChangePrompt(inventory, index);
                         } else if(input == "6") {
@@ -351,22 +355,35 @@ void promptChangeCount(GMItem * itemPtr) {
     }
 }
 
-void promptChangeCode(GMItem * itemPtr) {
+void promptChangeCode(vector<GMItem*>& inventory, GMItem * item) {
     string input;
-    bool valid = false;
+    bool isInt = false;
+    bool isTaken = true;
+    bool allGood = false;
+    GMItem * tmp = new GMItem(); // Test with new item for safety
+
     do {
-        cout << "\nEnter 'exit' to quit. Codes must be " << itemPtr->getMaxCodeDigits() << " digits or shorter." << endl
-             << "\nEnter new code for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
-        getline(cin, input);
-        if(input == "exit") {
-            valid = true;
-        } else {
-            valid = itemPtr->setItemCode(input);
-            if(!valid) {
-                cout << "Invalid input: " << input << endl;
+        do {
+            cout << "Enter the new item code. This must be " << item->CODE_MAX_DIGITS <<  " digits or shorter: ";
+            getline(cin, input);
+            isInt = tmp->setItemCode(input);
+        } while(!isInt);
+
+        if(isInt) {
+            isTaken = isCodeTaken(inventory, stoi(input));
+            if(isTaken) {
+                cout << "Code " << input << " is already taken." << endl;
+            } else {
+                item->setItemCode(input);
             }
         }
-    } while(!valid);
+
+        if(isInt && !isTaken) {
+            allGood = true;
+        }
+    } while(!allGood);
+
+    delete tmp;
 }
 
 void promptChangePrompt(vector<GMItem*>& items, const int& index) {
@@ -661,16 +678,50 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     return ofs.is_open();
 }// end openFileOut()
 
-void sortItemsByName(vector<GMItem*> items) {
+void sortItemsByCode(vector<GMItem*> items) {
     int i, j; 
     GMItem * key;
     for (i = 1; i < items.size(); i++) { 
        key = items.at(i); 
        j = i-1; 
-       while (j >= 0 && items.at(i)->getItemName() > key->getItemName()) { 
+       while (j >= 0 && items.at(i)->getItemCode() > key->getItemCode()) { 
            items.at(i+1) = items.at(j); 
            j = j-1; 
        } 
        items.at(j+1) = key; 
    } 
+}
+
+bool isCodeTaken(vector<GMItem*>& items, const int& code) {
+
+    int leftIndex = 0;
+    int rightIndex = items.size() - 1;
+    int midIndex = (items.size() / 2);
+
+    int leftCode = items.at(leftIndex)->getItemCode();
+    int rightCode = items.at(rightIndex)->getItemCode();
+    int midCode = items.at(midIndex)->getItemCode();
+
+    if(code == leftCode) {
+        return true;
+    } else if(code == rightCode) {
+        return true; 
+    } else if(code == midCode) {
+        return true;
+    } else if(code > leftCode && code < midCode) {
+        for(int i = leftIndex; i < midIndex; i++) {
+            if(items.at(i)->getItemCode() == code) {
+                return true;
+            }
+        }
+    }else if(code > midCode && code < rightCode) {
+        for(int i = midIndex; i < midIndex; i++) {
+            if(items.at(i)->getItemCode() == code) {
+                return true;
+            }
+        }
+    }
+   
+   return false;
+
 }
