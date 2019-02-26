@@ -18,7 +18,7 @@ void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(vector<GMItem*>& inventory, GMItem * item);
-bool isCodeTaken(vector<GMItem*>& inventory, const int& code);    
+bool isCodeTaken(vector<GMItem*>& inventory, const int& code);   // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good 
 // FIX: Plan to impliment full binary search at some point.
 void promptChangePrompt(vector<GMItem*>& items, const int& index);
 void promptChangeMinAge(vector<GMItem*>& items, const int& index);
@@ -109,17 +109,14 @@ int main() {
                 found = true;
                 bool doneWithThisItem = false;
                 do {
-                    cout << endl << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
-                    printAdminInfo(inventory);
-                    cout << "----------|------------|---------------------|-----------|--------|--------------" << endl
-                        << "Item found: " << itemPtr->getItemName() << endl << endl
-                        << "1. Change number on hand" << endl
-                        << "2. Change price" << endl
-                        << "3. Change item name" << endl
-                        << "4. Change item code" << endl
-                        << "5. Change item warning prompt" << endl
-                        << "6. Change item minimum age" << endl << endl
-                        << "Enter the number of the action you want to perform: ";    
+                    cout << "Item found: " << itemPtr->getItemName() << endl << endl
+                         << "1. Change number on hand" << endl
+                         << "2. Change price" << endl
+                         << "3. Change item name" << endl
+                         << "4. Change item code" << endl
+                         << "5. Change item warning prompt" << endl
+                         << "6. Change item minimum age" << endl << endl
+                         << "Enter the number of the action you want to perform: ";    
                     getline(cin,input);
 
                     if(input == "exit") {
