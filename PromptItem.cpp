@@ -12,7 +12,7 @@ bool PromptItem::setWarning(const string& warning) {
         try {
             this -> warning = warning;
             return true;
-        } catch (invalid_argument e) {
+        } catch (invalid_argument& e) {
             return false;
         }
     } else {

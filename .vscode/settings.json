@@ -9,6 +9,7 @@
         "istream": "cpp",
         "string": "cpp",
         "typeinfo": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "stdexcept": "cpp"
     }
 }

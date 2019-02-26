@@ -93,7 +93,7 @@ int main() {
                     if(index < 0 || index > inventory.size()) {
                         cout << "Invalid index: " << input << endl;
                     }
-                } catch (invalid_argument e) {
+                } catch (invalid_argument& e) {
                     if(input == "exit") {
                         return 0;
                     } else {
@@ -206,7 +206,7 @@ int main() {
                     } 
                 } while(!doneWithThisItem);
 
-            } catch(invalid_argument e) {
+            } catch(invalid_argument& e) {
                     cout << "Invalid input: " << input << endl;
             }   
                 
@@ -245,7 +245,7 @@ int main() {
                             inventory.erase(inventory.begin() + index);  // vector built in erase 
                         } 
                     }
-                } catch(invalid_argument e) {
+                } catch(invalid_argument& e) {
                     cout << "Invalid input: " << input << endl;
                 }
     } while (!valid && input != "exit" && input != "n");
@@ -532,7 +532,7 @@ void promptAddPromptItem(vector<GMItem*>& items) {
                 PromptItem * newPtr = new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code));
                 items.push_back(newPtr);
                 valid = true;
-            } catch (invalid_argument e) {
+            } catch (invalid_argument& e) {
                 cout << "One or more arguments were invalid. Try again." << endl;
                 valid = false;
             }
@@ -556,7 +556,7 @@ void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
                 AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
                 items.push_back(newPtr);
                 valid = true;
-            } catch (invalid_argument e) {
+            } catch (invalid_argument& e) {
                 cout << "One or more arguments were invalid. Try again." << endl;
                 valid = false;
             }
@@ -584,7 +584,7 @@ void promptDeleteItem(vector<GMItem*> items) {
                 return;
             }       
             valid = true;
-        } catch (invalid_argument e) {
+        } catch (invalid_argument& e) {
              cout << "Invalid code entered: " << input;
         }
     } while (!valid && input != "exit");

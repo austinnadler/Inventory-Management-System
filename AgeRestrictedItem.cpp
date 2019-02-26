@@ -11,7 +11,7 @@ bool AgeRestrictedItem::setMinAge(const string& minAge) {
     try {
         this -> minAge = stoi(minAge);
         return true;
-    } catch(invalid_argument e) {
+    } catch(invalid_argument& e) {
         return false;
     }
 }//end setMinAge()
