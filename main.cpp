@@ -71,7 +71,7 @@ int main() {
         //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
-        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl
+        cout << "----------|------------|----------------------|-----------|--------|--------------" << endl
             << "Enter the number of the action you want to perform." << endl
             << "1. Manage current inventory" << endl
             << "2. Add item" << endl
@@ -653,7 +653,7 @@ void writeItems(ofstream& ofs, vector<GMItem*>& items) {
 
 void printAdminInfo(vector<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
-        cout << "----------|------------|---------------------|-----------|--------|--------------" << endl;
+        cout << "----------|------------|----------------------|-----------|--------|--------------" << endl;
         cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
     }
 }
