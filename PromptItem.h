@@ -13,7 +13,7 @@ private:
     string warning;
     
 public:
-    const int MAX_WARNING_LENGTH = 20;
+    const int MAX_WARNING_LENGTH = 35;
     PromptItem(const PromptItem& copy) { 
         name = copy.name;
         price = copy.price;

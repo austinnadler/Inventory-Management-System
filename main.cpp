@@ -1,5 +1,5 @@
 // File: main.cpp
-
+//FIX: when providing item index, program crashes if given an out of bounds index
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -88,19 +88,19 @@ int main() {
                 cout << "\nEnter index of the item that you want to edit: ";
                 getline(cin, input);
                 try {
-                    validIndex = true;
                     int index = stoi(input);
-                    if(index < 0 || index > inventory.size()) {
-                        cout << "Invalid index: " << input << endl;
+
+                    if(index < 0 || index > inventory.size() ) {
+                        cerr << "Invalid index: " << input << endl;
                     }
+                    validIndex = true;
                 } catch (invalid_argument& e) {
                     if(input == "exit") {
                         return 0;
                     } else {
-                        cout << "Invalid input: " << input << endl;
+                        cerr << "Invalid input: " << input << endl;
                     }
                 }
-
             } while(!validIndex);
 
             try {
@@ -146,7 +146,7 @@ int main() {
                                                 } else {
                                                     valid = itemPtr->increaseCount(input);
                                                 if(!valid) {
-                                                    cout << "Invalid input: " << input << endl;
+                                                    cerr << "Invalid input: " << input << endl;
                                                 }  
                                             }
                                         } while(!valid);
@@ -160,7 +160,7 @@ int main() {
                                             } else {
                                                 valid = itemPtr->decreaseCount(input);
                                                 if(!valid) {
-                                                    cout << "Invalid input: " << input << endl;
+                                                    cerr << "Invalid input: " << input << endl;
                                                 }
                                             }
                                         } while(!valid);
@@ -174,7 +174,7 @@ int main() {
                                             } else {
                                                 valid = itemPtr->setNumOnHand(input);
                                                 if(!valid) {
-                                                    cout << "Invalid input: " << input << endl;
+                                                    cerr << "Invalid input: " << input << endl;
                                                 }
                                             }
                                         } while(!valid);
@@ -207,7 +207,7 @@ int main() {
                 } while(!doneWithThisItem);
 
             } catch(invalid_argument& e) {
-                    cout << "Invalid input: " << input << endl;
+                    cerr << "Invalid input: " << input << endl;
             }   
                 
             found = false;
@@ -233,7 +233,7 @@ int main() {
                 try {
                     int index = stoi(input);
                     if(index < 0 || index > inventory.size()) {
-                        cout << "Invalid index: " << index << endl;
+                        throw invalid_argument("Invalid");
                     } else {
                         valid = true;
                         cout << "Are you sure you want to delete this item from the inventory system?: " << endl
@@ -246,7 +246,7 @@ int main() {
                         } 
                     }
                 } catch(invalid_argument& e) {
-                    cout << "Invalid input: " << input << endl;
+                    cerr << "Invalid index: " << input << endl;
                 }
     } while (!valid && input != "exit" && input != "n");
         }
@@ -286,7 +286,7 @@ void promptChangeName(GMItem * itemPtr) {
         } else {
             valid = itemPtr->setItemName(input);
             if(!valid) {
-                cout << "Invalid input: " << input << endl;
+                cerr << "Invalid input: " << input << endl;
             }
         }
     } while(!valid);
@@ -302,7 +302,7 @@ void promptChangePrice(GMItem * itemPtr) {
         getline(cin, input);
         valid = itemPtr->setItemPrice(input);
             if(!valid) {
-                cout << "Invalid input: " << input << endl;
+                cerr << "Invalid input: " << input << endl;
             }
         } while(!valid && input != "exit");
         valid = false;  
@@ -324,7 +324,7 @@ void promptChangeCount(GMItem * itemPtr) {
             getline(cin, input);
             valid = itemPtr->increaseCount(input);
             if(!valid) {
-                cout << "Invalid input: " << input << endl;
+                cerr << "Invalid input: " << input << endl;
             }
         } while(!valid && input != "exit");
     valid = false;
@@ -335,7 +335,7 @@ void promptChangeCount(GMItem * itemPtr) {
             getline(cin, input);
             valid = itemPtr->decreaseCount(input);
             if(!valid) {
-                cout << "Invalid input: " << input << endl;
+                cerr << "Invalid input: " << input << endl;
             }
         } while(!valid && input != "exit");
     valid = false;     
@@ -346,7 +346,7 @@ void promptChangeCount(GMItem * itemPtr) {
             getline(cin, input);
             valid = itemPtr->setNumOnHand(input);
             if(!valid) {
-                cout << "Invalid input: " << input << endl;
+                cerr << "Invalid input: " << input << endl;
             }
         } while(!valid && input != "exit");
     valid = false;
@@ -533,7 +533,7 @@ void promptAddPromptItem(vector<GMItem*>& items) {
                 items.push_back(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
-                cout << "One or more arguments were invalid. Try again." << endl;
+                cerr << "One or more arguments were invalid. Try again." << endl;
                 valid = false;
             }
         }
@@ -557,7 +557,7 @@ void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
                 items.push_back(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
-                cout << "One or more arguments were invalid. Try again." << endl;
+                cerr << "One or more arguments were invalid. Try again." << endl;
                 valid = false;
             }
         }
@@ -585,7 +585,7 @@ void promptDeleteItem(vector<GMItem*> items) {
             }       
             valid = true;
         } catch (invalid_argument& e) {
-             cout << "Invalid code entered: " << input;
+             cerr << "Invalid code entered: " << input;
         }
     } while (!valid && input != "exit");
 }
