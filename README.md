@@ -12,7 +12,7 @@ In total, there are 10 "changes" that can be made to the items in the file. The 
  4) Change the item price
  5) Change the item name
  6) Change the item code
- 7) Change the item's warning prompt (if the item is of class ExpiringItem) or add one to it, which converts the item to a subclass ExpiringItem which means that the item has a special message attatched to it that will be displayed when it is entered into the checkout() function to warn the theoretical cashier to ensure that the item is not expired.
+ 7) Change the item's warning prompt (if the item is of class ExpiringItem) or add one to it, which converts the item to a subclass ExpiringItem which means that the item has a special message attatched to it that will be displayed when it is entered into the seperate POS System project to warn the theoretical cashier to ensure that the item is not expired.
  8) Change the item's minimum purchase age (if the item is of class AgeRestrictedItem) or add one to it, which converts the item to a subclass AgeRestrictedItem which means that it has as special field that stores and integer value representing the minimum age one must be to purchase it (for things like alcohol or M-rated games)
  
   
