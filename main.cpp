@@ -152,7 +152,7 @@ int main() {
                                 promptChangeName(itemPtr);
                                 save(ofs, inventory);    
                             } else if (input == "4") {
-                                promptChangeCode(inventory, itemPtr);
+                                promptChangeCode(itemPtr);
                                 save(ofs, inventory);    
                             } else if(input == "5") {
                                 promptChangePrompt(inventory, index);
@@ -173,7 +173,6 @@ int main() {
                             doneWithThisItem = true;
                         } 
                     } while(!doneWithThisItem); 
-                    
                 found = false;
         } else if(input == "2") {
             do {
@@ -197,12 +196,10 @@ int main() {
         } else if(input == "3") {
             promptDeleteItem(inventory);
         }
-    
     } while(input != "exit");
 
     cout << "Exiting..." << endl;
     file_status_t fOutStatus = openFileOut(ofs, outFileName);
-
 
     // cout << "Enter the name of your outfile: ";
     // getline(cin, outFileName);
@@ -320,7 +317,7 @@ void promptChangeCount(GMItem * itemPtr) {
     delete test;
 }//end promptChangeCount()
 
-void promptChangeCode(vector<GMItem*>& inventory, GMItem * item) {
+void promptChangeCode(GMItem * item) {
     string input;
     bool isInt = false;
     bool isTaken = true;
@@ -356,7 +353,7 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
     bool valid = false;
     PromptItem * newPtr = new PromptItem();
     PromptItem * prPtr = nullptr;
-    prPtr = dynamic_cast<PromptItem*>(prPtr);
+    prPtr = dynamic_cast<PromptItem*>(items.at(index));
     do {
         cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
@@ -378,15 +375,12 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
             } else if(valid && prPtr != nullptr) {
                 valid = prPtr->setWarning(input);
             }
-   
         } else if(input == "r") {
-            GMItem * newItemPtr = new GMItem(items.at(index)->getItemName(),
-                                             items.at(index)->getItemPrice(),
-                                             items.at(index)->getNumOnHand(),
-                                             items.at(index)->getItemCode());
-            delete items.at(index);
-            items.at(index) = newItemPtr;
-            save(ofs, items);
+            GMItem * newGMPtr = new GMItem(items.at(index)->getItemName(),
+                                           items.at(index)->getItemPrice(),
+                                           items.at(index)->getNumOnHand(),
+                                           items.at(index)->getItemCode());
+            items.at(index) = newGMPtr;
             valid = true;
         }
     } while(!valid);
@@ -397,12 +391,11 @@ void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
     bool valid = false;;
     AgeRestrictedItem * newPtr = new AgeRestrictedItem();
     AgeRestrictedItem * arPtr = nullptr;
-    arPtr = dynamic_cast<AgeRestrictedItem*>(arPtr);
+    arPtr = dynamic_cast<AgeRestrictedItem*>(items.at(index));
     do {
         cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
         if(input == "exit") {
-            save(ofs, items);
             valid = true;
         } else {
             if(input == "a" || input == "c") {
@@ -425,9 +418,7 @@ void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
                                                 items.at(index)->getItemPrice(),
                                                 items.at(index)->getNumOnHand(),
                                                 items.at(index)->getItemCode());
-                delete items.at(index);
                 items.at(index) = newItemPtr;
-                save(ofs, items);
                 valid = true;
             }
         }

@@ -18,7 +18,7 @@ using total_price_t = double;
 void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
-void promptChangeCode(vector<GMItem*>& inventory, GMItem * item);
+void promptChangeCode(GMItem * itemPtr);
 bool isCodeTaken(vector<GMItem*>& inventory, const int& code);       // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 void promptChangePrompt(vector<GMItem*>& items, const int& index);
 void promptChangeMinAge(vector<GMItem*>& items, const int& index);
