@@ -4,7 +4,7 @@ This project is currently has 2 main functions: inventory tracking(performAdminF
 
 The inventory tracking aspect is much more complicated than the POS aspect of the project. It starts out by opening a file that is assumed to have been created before hand for the first use, but after the first use, the program is able to read your file and process it so that you can save it and open it back up later to make more changes.
 
-In total, there are 10 "changes" that can be made to the items in the file. The first two are simple, adding and removing GMItems or any item of a subclass of GMItem to and from it. For the others, you will first need to specify what item you want to modify. After selecting an item by providing its code, you can do the following:
+In total, there are 10 "changes" that can be made to the items in the file. The first two are simple, adding and removing GMItems or any item of a subclass of GMItem to and from it. For the others, you will first need to specify what item you want to modify. After selecting an item by providing its index in the inventory vector, you can do the following:
   
  1) Increase the on hand count by any integer
  2) Decrease the on hand count by any integer
