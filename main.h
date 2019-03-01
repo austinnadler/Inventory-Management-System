@@ -26,9 +26,9 @@ void promptChangeMinAge(vector<GMItem*>& items, const int& index);
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
 void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid); //Prompt that all subclasses use first with error trapping
-void promptAddGMItem(vector<GMItem*>& items);
-void promptAddPromptItem(vector<GMItem*>& items);
-void promptAddAgeRestrictedItem(vector<GMItem*>& items);
+bool promptAddGMItem(vector<GMItem*>& items);
+bool promptAddPromptItem(vector<GMItem*>& items);
+bool promptAddAgeRestrictedItem(vector<GMItem*>& items);
 void promptDeleteItem(vector <GMItem*>& items);                      
 void writeBack(ofstream& ofs, vector<GMItem*>& items);               // writes to a new file with the same format as the example input file so it can be re-used.
 void printAdminInfo(vector<GMItem*>& items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()

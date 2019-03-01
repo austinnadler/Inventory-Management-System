@@ -175,6 +175,7 @@ int main() {
                     } while(!doneWithThisItem); 
                 found = false;
         } else if(input == "2") {
+            bool valid = false;
             do {
                 cout << "a. A GMItem with no special characteristics." << endl
                     << "b. A PromptItem with a warning to be stored." << endl
@@ -186,13 +187,13 @@ int main() {
                     return 0;
                 }
                 if(input == "a") {
-                    promptAddGMItem(inventory);
+                    valid = promptAddGMItem(inventory);
                 } else if (input == "b") {
-                    promptAddPromptItem(inventory);                    
+                    valid = promptAddPromptItem(inventory);                    
                 } else if(input == "c") {
-                    promptAddAgeRestrictedItem(inventory);  
+                    valid = promptAddAgeRestrictedItem(inventory);  
                 }
-            } while(input != "a" || input != "b" || input != "c");
+            } while((input != "a" || input != "b" || input != "c") && !valid);
         } else if(input == "3") {
             promptDeleteItem(inventory);
         }
@@ -471,16 +472,22 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
     delete test;
 }//end promptChangeMinAge()
 
-void promptAddGMItem(vector<GMItem*>& items) {
+bool promptAddGMItem(vector<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand;
     promptGeneralPrompt(code, name, price, numOnHand, valid);
     GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
-    items.push_back(newPtr);
-    save(ofs, items);
+    try {
+        items.push_back(newPtr);
+        save(ofs, items);
+        return true;
+    } catch (exception e) {
+        cerr << "Error adding to list" << endl;
+        return false;
+    }
 }//end promptAddGMItem()
 
-void promptAddPromptItem(vector<GMItem*>& items) {
+bool promptAddPromptItem(vector<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, warning;
     PromptItem * test = new PromptItem();
@@ -503,9 +510,10 @@ void promptAddPromptItem(vector<GMItem*>& items) {
     } while(!valid);     
     save(ofs, items);
     delete test;
+    return valid;
 }//end promptAddPromptItem()
 
-void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
+bool promptAddAgeRestrictedItem(vector<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, minAge;
     AgeRestrictedItem * test = new AgeRestrictedItem();
@@ -514,10 +522,6 @@ void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
         promptGeneralPrompt(code, name, price, numOnHand, valid);
         cout << "Enter the new minimum age: ";
         getline(cin, minAge);
-        if(minAge == "exit") {
-            save(ofs, items);
-            return;
-        }
         valid = test->setMinAge(minAge);
         if (valid) {
             try {
@@ -532,6 +536,7 @@ void promptAddAgeRestrictedItem(vector<GMItem*>& items) {
     } while(!valid);           
     save(ofs, items);
     delete test;
+    return valid;
 }//end promptAddAgeRestrictedItem()
 
 void promptDeleteItem(vector<GMItem*>& items) {
