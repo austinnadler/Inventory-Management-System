@@ -1,7 +1,5 @@
 # InventorySystem
 
-Uses dynamic memory allocation, run time type identification
-
 In total, there are 10 changes that can be made to the items in the file. The first two are simple, adding and removing GMItems or any item of a subclass of GMItem to and from it. For the others, you will first need to specify what item you want to modify. After selecting an item by providing its index in the inventory vector, you can do the following:
   
  1) Increase the on hand count by any integer
