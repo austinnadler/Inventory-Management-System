@@ -102,3 +102,11 @@ string GMItem::toStringFile() const {
     oss << code << "," <<  name << "," << fixed << setprecision(2) << price << "," << numOnHand;
     return oss.str();
 }// end toStringFile()
+
+void GMItem::operator =(const GMItem& o) {
+    name = o.name;
+    price = o.price;
+    numOnHand = o.numOnHand;
+    code = o.code;
+}//end =()
+

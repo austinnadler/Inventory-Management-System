@@ -37,3 +37,11 @@ string PromptItem::toStringFile() const {
     oss << GMItem::toStringFile() << "," << getWarning();
     return oss.str();
 }// end toStringFile() 
+
+void PromptItem::operator =(const PromptItem& o) {
+    name = o.name;
+    price = o.price;
+    numOnHand = o.numOnHand;
+    code = o.code;
+    warning = o.warning;
+}//end =()

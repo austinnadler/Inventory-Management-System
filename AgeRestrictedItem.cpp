@@ -33,3 +33,11 @@ string AgeRestrictedItem::toStringFile() const {
     oss << GMItem::toStringFile() << "," << getMinAge();
     return oss.str();
 }// end toStringFile()
+
+void AgeRestrictedItem::operator =(const AgeRestrictedItem& o) {
+    name = o.name;
+    price = o.price;
+    numOnHand = o.numOnHand;
+    code = o.code;
+    minAge = o.minAge;
+}//end =()

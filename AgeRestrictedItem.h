@@ -37,6 +37,8 @@ public:
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;
     virtual string toStringBack() const; 
+
+    void operator =(const AgeRestrictedItem& o);
 };
 
 #endif

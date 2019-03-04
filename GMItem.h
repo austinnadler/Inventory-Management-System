@@ -42,6 +42,25 @@ class GMItem {
         virtual string toStringAdmin() const;
         virtual string toStringFile()  const;
         virtual string toStringBack()  const; // make a new string in the same format as the input file is read in
+
+        void operator =(const GMItem& o);
+        bool operator <(const GMItem& o) {
+            return price < o.price;
+        }//end <()
+
+        // bool operator <=(const GMItem& o) {
+        //     return o1.price <= o2.price;
+        // }//end <=()
+
+        // bool operator >(const GMItem& o) {
+        //     return o1.price > o2.price;
+        // }//end >()
+
+        // bool operator >=(const GMItem& o) {
+        //     return o1.price >= o2.price;
+        // }//end >=()
+
+
 };
 
 #endif

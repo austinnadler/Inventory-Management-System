@@ -39,6 +39,8 @@ public:
     virtual string toStringFile() const;
     virtual string toStringBack() const;
 
+    void operator =(const PromptItem& o);
+
 };
 
 #endif

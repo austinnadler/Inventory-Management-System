@@ -3,7 +3,50 @@
 // FIX: debug saving further
 // FIX: crea
 
-#include "main.h"
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+#include "List.h"
+#include "GMItem.h"
+#include "PromptItem.h"
+#include "AgeRestrictedItem.h"
+using file_status_t = bool;
+using total_price_t = double;
+
+/* Loops that call their respective setters when editing items in the inventory system */
+/* Created to simplify the main method                                                 */
+void promptChangeCount(GMItem * itemPtr);
+void promptChangeName(GMItem * itemPtr);    
+void promptChangePrice(GMItem * itemPtr);
+void promptChangeCode(GMItem * itemPtr);
+bool isCodeTaken(List<GMItem*>& inventory, const int& code);       // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+void promptChangePrompt(List<GMItem*>& items, const int& index);
+void promptChangeMinAge(List<GMItem*>& items, const int& index);
+
+/* Functions to add items to the inventory system */
+/* Created to simplify the main method            */
+void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid); //Prompt that all subclasses use first with error trapping
+bool promptAddGMItem(List<GMItem*>& items);
+bool promptAddPromptItem(List<GMItem*>& items);
+bool promptAddAgeRestrictedItem(List<GMItem*>& items);
+void promptDeleteItem(List <GMItem*>& items);                      
+void writeBack(ofstream& ofs, List<GMItem*>& items);               // writes to a new file with the same format as the example input file so it can be re-used.
+void printAdminInfo(List<GMItem*>& items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);       // take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, List<GMItem*>& items);              // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void save(ofstream& ofs, List<GMItem*>& items);                    // writeBack() and close file.
+file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
+file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
+
+/* Used in several functions */
+string inFileName = "items.csv"; // only used in loadItemFromFile(), here for organization
+string outFileName = "itemsOut.csv";
+ifstream ifs; // only used in loadItemFromFile(), here for organization
+ofstream ofs;
+List<GMItem*> inventory;
+using namespace std;
 
 int main() {
     string input;
@@ -20,7 +63,7 @@ int main() {
     }
 
     loadItemsFromFile(ifs, inventory); 
-    sort(inventory);
+    inventory.sort();
     do {
         //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
@@ -59,7 +102,7 @@ int main() {
                     }
                 }while( index < 0 || index > maxIndex);
 
-                GMItem * itemPtr = inventory.at(index);
+                GMItem * itemPtr = inventory.getAt(index);
                 found = true;
                 bool doneWithThisItem = false;
                 do {
@@ -209,7 +252,7 @@ int main() {
         cout << "Error opening file \"" << outFileName << "\"" << endl;
         exit(1);
     }
-    // After making all the changes, write the new vector to the file and close the stream
+    // After making all the changes, write the new List to the file and close the stream
     save(ofs, inventory);
     return 0;
 }// end main()
@@ -349,12 +392,12 @@ void promptChangeCode(GMItem * item) {
     delete test;
 }//propmtChangeCode()
 
-void promptChangePrompt(vector<GMItem*>& items, const int& index) {
+void promptChangePrompt(List<GMItem*>& items, const int& index) {
     string input;
     bool valid = false;
     PromptItem * newPtr = new PromptItem();
     PromptItem * prPtr = nullptr;
-    prPtr = dynamic_cast<PromptItem*>(items.at(index));
+    prPtr = dynamic_cast<PromptItem*>(items.getAt(index));
     do {
         cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
@@ -363,36 +406,36 @@ void promptChangePrompt(vector<GMItem*>& items, const int& index) {
         }
         if(input == "a" || input == "c") {
             cout << "Warning prompts must be " << newPtr->getMaxWarningLength() << " characters or shorter." << endl
-                 << "Enter the new warning for item " << items.at(index)->getItemName() << " - " << items.at(index)->getItemCode() << ": ";
+                 << "Enter the new warning for item " << items.getAt(index)->getItemName() << " - " << items.getAt(index)->getItemCode() << ": ";
             getline(cin, input);
             valid = newPtr->setWarning(input);
             if(valid && prPtr == nullptr) {
                 newPtr->setWarning(input);
-                newPtr->setItemName(items.at(index)->getItemName());
-                newPtr->setItemCode(to_string(items.at(index)->getItemCode()));
-                newPtr->setItemPrice(to_string(items.at(index)->getItemPrice()));
-                newPtr->setNumOnHand(to_string(items.at(index)->getNumOnHand()));
-                items.at(index) = newPtr;
+                newPtr->setItemName(items.getAt(index)->getItemName());
+                newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
+                newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
+                newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
+                items.pushAt(index, newPtr);
             } else if(valid && prPtr != nullptr) {
                 valid = prPtr->setWarning(input);
             }
         } else if(input == "r") {
-            GMItem * newGMPtr = new GMItem(items.at(index)->getItemName(),
-                                           items.at(index)->getItemPrice(),
-                                           items.at(index)->getNumOnHand(),
-                                           items.at(index)->getItemCode());
-            items.at(index) = newGMPtr;
+            GMItem * newGMPtr = new GMItem(items.getAt(index)->getItemName(),
+                                           items.getAt(index)->getItemPrice(),
+                                           items.getAt(index)->getNumOnHand(),
+                                           items.getAt(index)->getItemCode());
+            items.pushAt(index, newGMPtr);
             valid = true;
         }
     } while(!valid);
 }//end promptChangePrompt()
 
-void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
+void promptChangeMinAge(List<GMItem*>& items, const int& index) {
     string input;
     bool valid = false;;
     AgeRestrictedItem * newPtr = new AgeRestrictedItem();
     AgeRestrictedItem * arPtr = nullptr;
-    arPtr = dynamic_cast<AgeRestrictedItem*>(items.at(index));
+    arPtr = dynamic_cast<AgeRestrictedItem*>(items.getAt(index));
     do {
         cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
@@ -401,25 +444,25 @@ void promptChangeMinAge(vector<GMItem*>& items, const int& index) {
         } else {
             if(input == "a" || input == "c") {
                 cout << "Input only integer values such as '18' or '21'."<< endl
-                    << "Enter the new minium age for item " << items.at(index)->getItemName() << " - " << items.at(index)->getItemCode() << ": ";    
+                    << "Enter the new minium age for item " << items.getAt(index)->getItemName() << " - " << items.getAt(index)->getItemCode() << ": ";    
                 getline(cin, input);
                 valid = newPtr->setMinAge(input);
                 if(valid && arPtr == nullptr) {
                     newPtr->setMinAge(input);
-                    newPtr->setItemName(items.at(index)->getItemName());
-                    newPtr->setItemCode(to_string(items.at(index)->getItemCode()));
-                    newPtr->setItemPrice(to_string(items.at(index)->getItemPrice()));
-                    newPtr->setNumOnHand(to_string(items.at(index)->getNumOnHand()));
-                    items.at(index) = newPtr;
+                    newPtr->setItemName(items.getAt(index)->getItemName());
+                    newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
+                    newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
+                    newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
+                    items.pushAt(index, newPtr);
                 } else if(valid && arPtr != nullptr) {
                     valid = arPtr->setMinAge(input);
                 }
             } else if(input == "r") {
-                GMItem * newItemPtr = new GMItem(items.at(index)->getItemName(),
-                                                items.at(index)->getItemPrice(),
-                                                items.at(index)->getNumOnHand(),
-                                                items.at(index)->getItemCode());
-                items.at(index) = newItemPtr;
+                GMItem * newItemPtr = new GMItem(items.getAt(index)->getItemName(),
+                                                items.getAt(index)->getItemPrice(),
+                                                items.getAt(index)->getNumOnHand(),
+                                                items.getAt(index)->getItemCode());
+                items.pushAt(index, newItemPtr);
                 valid = true;
             }
         }
@@ -472,13 +515,13 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
     delete test;
 }//end promptChangeMinAge()
 
-bool promptAddGMItem(vector<GMItem*>& items) {
+bool promptAddGMItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand;
     promptGeneralPrompt(code, name, price, numOnHand, valid);
     GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
     try {
-        items.push_back(newPtr);
+        items.pushBack(newPtr);
         save(ofs, items);
         return true;
     } catch (exception e) {
@@ -487,7 +530,7 @@ bool promptAddGMItem(vector<GMItem*>& items) {
     }
 }//end promptAddGMItem()
 
-bool promptAddPromptItem(vector<GMItem*>& items) {
+bool promptAddPromptItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, warning;
     PromptItem * test = new PromptItem();
@@ -500,7 +543,7 @@ bool promptAddPromptItem(vector<GMItem*>& items) {
         if (valid) {
             try {
                 PromptItem * newPtr = new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code));
-                items.push_back(newPtr);
+                items.pushBack(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
                 cerr << "One or more arguments were invalid. Try again." << endl;
@@ -513,7 +556,7 @@ bool promptAddPromptItem(vector<GMItem*>& items) {
     return valid;
 }//end promptAddPromptItem()
 
-bool promptAddAgeRestrictedItem(vector<GMItem*>& items) {
+bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, minAge;
     AgeRestrictedItem * test = new AgeRestrictedItem();
@@ -526,7 +569,7 @@ bool promptAddAgeRestrictedItem(vector<GMItem*>& items) {
         if (valid) {
             try {
                 AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
-                items.push_back(newPtr);
+                items.pushBack(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
                 cerr << "One or more arguments were invalid. Try again." << endl;
@@ -539,7 +582,7 @@ bool promptAddAgeRestrictedItem(vector<GMItem*>& items) {
     return valid;
 }//end promptAddAgeRestrictedItem()
 
-void promptDeleteItem(vector<GMItem*>& items) {
+void promptDeleteItem(List<GMItem*>& items) {
     string input;
     int index;
     int maxIndex = items.size() - 1;
@@ -560,11 +603,11 @@ void promptDeleteItem(vector<GMItem*>& items) {
         try {
             index = stoi(input);
             cout << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-                 << items.at(index)->toStringAdmin() << endl
+                 << items.getAt(index)->toStringAdmin() << endl
                  << "Delete item? (y/n): ";
             getline(cin, input);
             if(input == "y") {
-                items.erase(items.begin() + index);
+                items.deleteAt(index);
                 save(ofs, items);
             } else if (input == "n") {
                 return;
@@ -579,7 +622,7 @@ void promptDeleteItem(vector<GMItem*>& items) {
 /*------------------------ Utilities ------------------------*/
 /*-----------------------------------------------------------*/
 
-void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items) {
+void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items) {
     string itemType;
     string name;
     string price;
@@ -603,7 +646,7 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items) {
             getline(ifs, code);
 
             PromptItem * pi = new PromptItem(expirationDate, name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(pi);
+            items.pushBack(pi);
             getline(ifs, itemType, ',');
         } else if (itemType == general) {
             getline(ifs, name, ',');
@@ -612,7 +655,7 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items) {
             getline(ifs, code);
 
             GMItem * gm = new GMItem(name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(gm);
+            items.pushBack(gm);
             getline(ifs, itemType, ',');
         } 
         else if (itemType == ageRestricted) {
@@ -623,23 +666,23 @@ void loadItemsFromFile(ifstream& ifs, vector<GMItem*>& items) {
             getline(ifs, code);
 
             AgeRestrictedItem * ar = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(qtyOnHand), stoi(code));
-            items.push_back(ar);
+            items.pushBack(ar);
             getline(ifs, itemType, ',');
         }
     }
 }//end loadItemsFromFile()
 
-void writeBack(ofstream& ofs, vector<GMItem*>& items) {
+void writeBack(ofstream& ofs, List<GMItem*>& items) {
     for(int i = 0; i < items.size(); i++) {
-        ofs << items.at(i)->toStringBack() << endl;
+        ofs << items.getAt(i)->toStringBack() << endl;
     }
     // DOES NOT CLOSE FILE! THIS IS INTENTIONAL SO THAT MULTIPLE CHANGES CAN BE MADE!
 }//end writeItems()
 
-void printAdminInfo(vector<GMItem*>& items) {
+void printAdminInfo(List<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
         cout << "----------|------------|----------------------|-----------|--------|--------------" << endl;
-        cout << setw(10) << left << i << "| " << items.at(i)->toStringAdmin() << endl;
+        cout << setw(10) << left << i << "| " << items.getAt(i)->toStringAdmin() << endl;
     }
 }
 
@@ -653,22 +696,22 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     return ofs.is_open();
 }//end openFileOut()
 
-bool isCodeTaken(vector<GMItem*>& items, const int& code) { 
+bool isCodeTaken(List<GMItem*>& items, const int& code) { 
     for(int i = 0; i < items.size(); i++) {
-        if(items.at(i)->getItemCode() == code) {
+        if(items.getAt(i)->getItemCode() == code) {
             return true;
         }
     }
     return false;
 }//end isCodeTaken() // FIX: Plan to impliment binary search
 
-void sort(vector<GMItem*>& items) {
-    sort(items.begin(), items.end(), [](const GMItem* lhs, const GMItem* rhs) {
-        return lhs->getItemCode() < rhs->getItemCode();
-    });
-}//end sort()
+// void sort(List<GMItem*>& items) {
+//     sort(items.begin(), items.end(), [](const GMItem* lhs, const GMItem* rhs) {
+//         return lhs->getItemCode() < rhs->getItemCode();
+//     });
+// }//end sort()
 
-void save(ofstream& ofs, vector<GMItem*>& items) {
+void save(ofstream& ofs, List<GMItem*>& items) {
     openFileOut(ofs, outFileName);
     writeBack(ofs, items);
     ofs.close();
