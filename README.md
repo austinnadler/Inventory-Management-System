@@ -1,6 +1,8 @@
 # InventorySystem
 
-In total, there are 10 changes that can be made to the items in the file. The first two are simple, adding and removing GMItems or any item of a subclass of GMItem to and from it. For the others, you will first need to specify what item you want to modify. After selecting an item by providing its index in the inventory vector, you can do the following:
+This program includes "List.h" which is a template class created to store a dynamically allocated array.
+
+In total, there are 10 changes that can be made to the items in the file. The first two are simple, adding and removing GMItems or any item of a subclass of GMItem to and from it. For the others, you will first need to specify what item you want to modify. After selecting an item by providing its index in the inventory List, you can do the following:
   
  1) Increase the on hand count by any integer
  2) Decrease the on hand count by any integer
