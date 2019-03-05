@@ -7,10 +7,10 @@
 #include <iomanip>
 using namespace std;
 
-bool PromptItem::setWarning(const string& warning) {
-    if(!(warning.length() > MAX_WARNING_LENGTH)) {
+bool PromptItem::setPrompt(const string& prompt) {
+    if(!(prompt.length() > MAX_PROMPT_LENGTH)) {
         try {
-            this -> warning = warning;
+            this -> prompt = prompt;
             return true;
         } catch (invalid_argument& e) {
             return false;
@@ -18,23 +18,23 @@ bool PromptItem::setWarning(const string& warning) {
     } else {
         return false;
     }
-}// end setWarning()
+}// end setprompt()
 
 string PromptItem::toStringBack() const {
     ostringstream oss;
-    oss << "pa," << warning << "," << name << "," << price << "," << numOnHand << "," << code;
+    oss << "pr," << prompt << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
 }//end toStringBack()
 
 string PromptItem::toStringAdmin() const {
     ostringstream oss;
-    oss << GMItem::toStringAdmin() << " Prompt: " << "\"" << getWarning() << "\"";
+    oss << GMItem::toStringAdmin() << " Prompt: " << "\"" << getPrompt() << "\"";
     return oss.str();
 }// and toStringAdmin()
 
 string PromptItem::toStringFile() const {
     ostringstream oss;
-    oss << GMItem::toStringFile() << "," << getWarning();
+    oss << GMItem::toStringFile() << "," << getPrompt();
     return oss.str();
 }// end toStringFile() 
 
@@ -43,5 +43,5 @@ void PromptItem::operator =(const PromptItem& o) {
     price = o.price;
     numOnHand = o.numOnHand;
     code = o.code;
-    warning = o.warning;
+    prompt = o.prompt;
 }//end =()

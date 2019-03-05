@@ -18,7 +18,7 @@ bool AgeRestrictedItem::setMinAge(const string& minAge) {
 
 string AgeRestrictedItem::toStringBack() const {
     ostringstream oss;
-    oss << "pa," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
+    oss << "ar," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
 }//end toStringBack()
 

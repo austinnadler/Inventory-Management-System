@@ -19,7 +19,7 @@ using total_price_t = double;
 void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
-void promptChangeCode(GMItem * itemPtr);
+void promptChangeCode(GMItem * itemPtr, List<GMItem*> items);
 void promptChangeNumberOnHand(GMItem * itemPtr);
 // These two get the List and the index because they to use Lists pushAt()
 void promptChangePrompt(List<GMItem*>& items, const int& index);
@@ -39,18 +39,19 @@ void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a p
 void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
-bool isCodeTaken(List<GMItem*>& inventory, const int& code);         // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+bool isCodeTaken(List<GMItem*>& items, const int& code);         // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 
 /* Used in several functions */
-string inFileName = "items.csv"; // only used in loadItemFromFile(), here for organization
+string inFileName = "items.csv";
 string outFileName = "itemsOut.csv";
-ifstream ifs; // only used in loadItemFromFile(), here for organization
+ifstream ifs;
 ofstream ofs;
-List<GMItem*> inventory;
+
 
 using namespace std;
 
 int main() {
+    List<GMItem*> inventory;
     string input;
     // cout << "Enter the inventory list file name with extension: ";
     // getline(cin, inFileName);
@@ -78,6 +79,12 @@ int main() {
              << "and at any time, you can enter 'exit' to back out to this menu." << endl << endl
              << "Enter your choice: ";
         getline(cin, input);
+
+        if(input == "exit") {
+            save(ofs, inventory);
+            cout << "Exiting..." << endl;
+            return 0;
+        }
         
         if(input == "1") {
             // I found it better when testing to not have these as loops to avoid having to restart the program constantly
@@ -112,7 +119,7 @@ int main() {
                          << "2. Change price" << endl
                          << "3. Change item name" << endl
                          << "4. Change item code" << endl
-                         << "5. Change item warning prompt" << endl
+                         << "5. Change item prompt" << endl
                          << "6. Change item minimum age" << endl << endl
                          << "Enter the number of the action you want to perform: ";    
                     getline(cin,input);
@@ -130,7 +137,7 @@ int main() {
                                 promptChangeName(itemPtr);
                                 save(ofs, inventory);    
                             } else if (input == "4") {
-                                promptChangeCode(itemPtr);
+                                promptChangeCode(itemPtr, inventory);
                                 save(ofs, inventory);    
                             } else if(input == "5") {
                                 promptChangePrompt(inventory, index);
@@ -156,7 +163,7 @@ int main() {
             bool valid = false;
             do {
                 cout << "a. A GMItem with no special characteristics." << endl
-                    << "b. A PromptItem with a warning to be stored." << endl
+                    << "b. A PromptItem with a prompt to be stored." << endl
                     << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl
                     << "Enter the character of your choice: ";
                 getline(cin, input);
@@ -176,20 +183,6 @@ int main() {
             promptDeleteItem(inventory);
         }
     } while(input != "exit");
-
-    cout << "Exiting..." << endl;
-    file_status_t fOutStatus = openFileOut(ofs, outFileName);
-
-    // cout << "Enter the name of your outfile: ";
-    // getline(cin, outFileName);
-
-    if(!fOutStatus) {
-        cout << "Error opening file \"" << outFileName << "\"" << endl;
-        exit(1);
-    }
-    // After making all the changes, write the new List to the file and close the stream
-    save(ofs, inventory);
-    return 0;
 }// end main()
 
 /*--------------------------------------------------------------*/
@@ -206,112 +199,72 @@ void promptChangeNumberOnHand(GMItem * itemPtr) {
                 << "Enter the character of the action you want to perform: ";
         getline(cin, input);
         
-        if(input == "exit") {
-            save(ofs, inventory);
-            return;
-            } else {
+       
                 if(input == "a") {
                     do {
-                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                        cout << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
                         getline(cin, input);
                         valid = itemPtr->increaseCount(input);
                         if(!valid) {
-                            if(input == "exit") {
-                                save(ofs, inventory);
-                                return;
-                            } else {
-                                cerr << "Invalid input: " << input << endl;
-                            }  
+                            cerr << "Invalid input: " << input << endl;
                         }   
                     } while(!valid);
                 } else if (input == "b") {
                     do {
-                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                            << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                        cout << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
                         getline(cin, input);
-                        save(ofs, inventory);
-
-                        if(input == "exit") {
-                            save(ofs, inventory);
-                            return;
-                        } else {
-                            valid = itemPtr->decreaseCount(input);
-                            if(!valid) {
-                                cerr << "Invalid input: " << input << endl;
-                            }
+                        valid = itemPtr->decreaseCount(input);
+                        if(!valid) {
+                            cerr << "Invalid input: " << input << endl;
                         }
+                        
                     } while(!valid);
                 } else if(input == "c") {
                     do {
-                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                            << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+                        cout << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
                         getline(cin, input);
-                        if(input == "exit") {
-                            save(ofs, inventory);
-                            return;
-                        } else {
-                            valid = itemPtr->setNumOnHand(input);
-                            if(!valid) {
-                                cerr << "Invalid input: " << input << endl;
-                            }
-                        }
+                        valid = itemPtr->setNumOnHand(input);
+                        if(!valid) {
+                            cerr << "Invalid input: " << input << endl;
+                        } 
                     } while(!valid);
             } else {
                 valid = false;
             }
-        }                              
-    } while(!valid && input != "exit");
-    save(ofs, inventory); 
+                                      
+    } while(!valid);
 }
 void promptChangeName(GMItem * itemPtr) {
     string input;
     bool valid = false;
-    GMItem * test = new GMItem();
     do {
-        cout << "\nEnter 'exit' to quit. The name can be anything " << itemPtr->getMaxNameLength() << " characters or less." << endl
-             << "\nEnter the new item namefor item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+        cout << "\nEnter the new item name for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
-        if(input == "exit") {
-            valid = true;
-        } else {
-            valid = test->setItemName(input);
-            if(!valid) {
-                cerr << "Invalid input: " << input << endl;
-            } else {
-                itemPtr->setItemName(input);
-                save(ofs, inventory);
-            }
+        valid = itemPtr->setItemName(input);
+        if(!valid) {
+            cerr << "Invalid input: " << input << endl;
         }
     } while(!valid);
-    delete test;
 }//end promptChangeName()
 
 void promptChangePrice(GMItem * itemPtr) {
     string input;
     bool valid = false;
-    GMItem * test = new GMItem();
     do {
         cout << "Enter an integer or decimal value (e.g. 5, or 4.99)" << endl
-             << "\nEnter 'exit' to quit." << endl
              << "\nEnter the new price for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
         getline(cin, input);
-        valid = test->setItemPrice(input);
+        valid = itemPtr->setItemPrice(input);
             if(!valid) {
                 cerr << "Invalid input: " << input << endl;
-            } else {
-                itemPtr->setItemPrice(input);
-                save(ofs, inventory);
             }
-        } while(!valid && input != "exit");
+        } while(!valid);
     valid = false;  
-    delete test;
 }//end promptChangePrice()
 
 void promptChangeCount(GMItem * itemPtr) {
     string input;
     bool valid = false;
-    GMItem * test = new GMItem();
     cout << endl
          << "a. Add to the current count" << endl
          << "b. Subtract from the current count" << endl
@@ -320,61 +273,47 @@ void promptChangeCount(GMItem * itemPtr) {
     getline(cin, input);
     if(input == "a") {
         do {
-            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                 << "\nIncrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+            cout << "\nIncrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
             getline(cin, input);
-            valid = test->increaseCount(input);
+            valid = itemPtr->increaseCount(input);
             if(!valid) {
                 cerr << "Invalid input: " << input << endl;
-            } else {
-                itemPtr->decreaseCount(input);
-                save(ofs, inventory);
             }
-        } while(!valid && input != "exit");
+        } while(!valid);
     valid = false;
     } else if (input == "b") {
         do {
-            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                 << "\nDecrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+            cout << "\nDecrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
             getline(cin, input);
-            valid = test->decreaseCount(input);
+            valid = itemPtr->decreaseCount(input);
             if(!valid) {
                 cerr << "Invalid input: " << input << endl;
-            } else {
-                itemPtr->decreaseCount(input);
-                save(ofs, inventory);
-            }
-        } while(!valid && input != "exit");
+            } 
+        } while(!valid);
     valid = false;     
     } else if(input == "c") {
         do {
-            cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                 << "\nEnter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+            cout << "\nEnter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
             getline(cin, input);
-            valid = test->setNumOnHand(input);
+            valid = itemPtr->setNumOnHand(input);
             if(!valid) {
                 cerr << "Invalid input: " << input << endl;
-            } else {
-                itemPtr->decreaseCount(input);
-                save(ofs, inventory);
             }
-        } while(!valid && input != "exit");
+        } while(!valid);
     valid = false;
     }
-    delete test;
 }//end promptChangeCount()
 
-void promptChangeCode(GMItem * item) {
+void promptChangeCode(GMItem * itemPtr, List<GMItem*> inventory) {
     string input;
     bool isInt = false;
     bool isTaken = true;
     bool allGood = false;
-    GMItem * test = new GMItem(); // Test with new item for safety
     do {
         do {
-            cout << "Enter the new item code. This must be " << item->CODE_MAX_DIGITS <<  " digits or shorter: ";
+            cout << "Enter the new item code. This must be " << itemPtr->CODE_MAX_DIGITS <<  " digits or shorter: ";
             getline(cin, input);
-            isInt = test->setItemCode(input);
+            isInt = itemPtr->setItemCode(input);
         } while(!isInt);
 
         if(isInt) {
@@ -382,7 +321,7 @@ void promptChangeCode(GMItem * item) {
             if(isTaken) {
                 cout << "Code " << input << " is already taken." << endl;
             } else {
-                item->setItemCode(input);
+                itemPtr->setItemCode(input);
             }
         }
 
@@ -391,8 +330,6 @@ void promptChangeCode(GMItem * item) {
             save(ofs, inventory);
         }
     } while(!allGood);
-
-    delete test;
 }//promptChangeCode()
 
 void promptChangePrompt(List<GMItem*>& items, const int& index) {
@@ -402,31 +339,33 @@ void promptChangePrompt(List<GMItem*>& items, const int& index) {
     PromptItem * prPtr = nullptr;
     prPtr = dynamic_cast<PromptItem*>(items.getAt(index));
     do {
-        cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
+        cout << "Enter 'r' to remove the prompt from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
         if(input == "exit") {
             valid = true;
         }
         if(input == "a" || input == "c") {
-            cout << "Warning prompts must be " << newPtr->getMaxWarningLength() << " characters or shorter." << endl
-                 << "Enter the new warning for item " << items.getAt(index)->getItemName() << " - " << items.getAt(index)->getItemCode() << ": ";
+            cout << "Prompts must be " << newPtr->MAX_PROMPT_LENGTH << " characters or shorter." << endl
+                 << "Enter the new prompt for item " << items.getAt(index)->getItemName() << " - " << items.getAt(index)->getItemCode() << ": ";
             getline(cin, input);
-            valid = newPtr->setWarning(input);
+            valid = newPtr->setPrompt(input);
             if(valid && prPtr == nullptr) {
-                newPtr->setWarning(input);
+                newPtr->setPrompt(input);
                 newPtr->setItemName(items.getAt(index)->getItemName());
                 newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
                 newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
                 newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
+                items.popAt(index);
                 items.pushAt(index, newPtr);
             } else if(valid && prPtr != nullptr) {
-                valid = prPtr->setWarning(input);
+                valid = prPtr->setPrompt(input);
             }
         } else if(input == "r") {
             GMItem * newGMPtr = new GMItem(items.getAt(index)->getItemName(),
                                            items.getAt(index)->getItemPrice(),
                                            items.getAt(index)->getNumOnHand(),
                                            items.getAt(index)->getItemCode());
+            items.deleteAt(index);
             items.pushAt(index, newGMPtr);
             valid = true;
         }
@@ -440,7 +379,7 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
     AgeRestrictedItem * arPtr = nullptr;
     arPtr = dynamic_cast<AgeRestrictedItem*>(items.getAt(index));
     do {
-        cout << "Enter 'r' to remove the warning from this item, or 'a' or 'c' to add or change the prompt." << endl;
+        cout << "Enter 'r' to remove the prompt from this item, or 'a' or 'c' to add or change the prompt." << endl;
         getline(cin, input);
         if(input == "exit") {
             valid = true;
@@ -456,6 +395,7 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
                     newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
                     newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
                     newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
+                    items.popAt(index);
                     items.pushAt(index, newPtr);
                 } else if(valid && arPtr != nullptr) {
                     valid = arPtr->setMinAge(input);
@@ -465,6 +405,7 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
                                                 items.getAt(index)->getItemPrice(),
                                                 items.getAt(index)->getNumOnHand(),
                                                 items.getAt(index)->getItemCode());
+                items.deleteAt(index);
                 items.pushAt(index, newItemPtr);
                 valid = true;
             }
@@ -535,17 +476,17 @@ bool promptAddGMItem(List<GMItem*>& items) {
 
 bool promptAddPromptItem(List<GMItem*>& items) {
     bool valid = false;
-    string code, name, price, numOnHand, warning;
+    string code, name, price, numOnHand, prompt;
     PromptItem * test = new PromptItem();
     
     do {
         promptGeneralPrompt(code, name, price, numOnHand, valid);
-        cout << "Enter the 20 character maximum warning: ";
-        getline(cin, warning);
-        valid = test->setWarning(warning);
+        cout << "Enter the 20 character maximum prompt: ";
+        getline(cin, prompt);
+        valid = test->setPrompt(prompt);
         if (valid) {
             try {
-                PromptItem * newPtr = new PromptItem(warning, name, stod(price), stoi(numOnHand), stoi(code));
+                PromptItem * newPtr = new PromptItem(prompt, name, stod(price), stoi(numOnHand), stoi(code));
                 items.pushBack(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
@@ -636,12 +577,12 @@ void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items) {
 
     using type_id_t = string;
     type_id_t ageRestricted = "ar";
-    type_id_t warning = "warn";
+    type_id_t prompt = "pr";
     type_id_t general = "gm";
 
     getline(ifs, itemType, ',');
     while(!ifs.eof()) {
-        if(itemType == warning) {
+        if(itemType == prompt) {
             getline(ifs, expirationDate, ',');
             getline(ifs, name, ',');
             getline(ifs, price, ',');
