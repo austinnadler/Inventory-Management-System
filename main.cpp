@@ -21,7 +21,7 @@ void promptChangeName(GMItem * itemPtr);
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(GMItem * itemPtr, List<GMItem*> items);
 void promptChangeNumberOnHand(GMItem * itemPtr);
-// These two get the List and the index because they to use Lists pushAt()
+// These two get the List and the index because they use Lists pushAt()
 void promptChangePrompt(List<GMItem*>& items, const int& index);
 void promptChangeMinAge(List<GMItem*>& items, const int& index);
 
@@ -50,7 +50,6 @@ ofstream ofs;
 using namespace std;
 
 int main() {
-    cout << "I changed this file!" << endl;
     List<GMItem*> inventory;
     string input;
     // cout << "Enter the inventory list file name with extension: ";
