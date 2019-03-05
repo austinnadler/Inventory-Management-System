@@ -50,6 +50,7 @@ ofstream ofs;
 using namespace std;
 
 int main() {
+    cout << "I changed this file!" << endl;
     List<GMItem*> inventory;
     string input;
     // cout << "Enter the inventory list file name with extension: ";
