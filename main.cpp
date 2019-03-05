@@ -47,6 +47,7 @@ string outFileName = "itemsOut.csv";
 ifstream ifs;
 ofstream ofs;
 
+String gitTest = "Testing command git";
 
 using namespace std;
 
