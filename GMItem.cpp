@@ -69,7 +69,7 @@ bool GMItem::increaseCount(const string& n) {
     } catch (invalid_argument& e) {
         return false;
     }
-}//end increaseCount
+}//end increaseCount()
 
 bool GMItem::setItemCode(const string& code) {
         try {
@@ -101,7 +101,7 @@ string GMItem::toStringFile() const {
     ostringstream oss;
     oss << code << "," <<  name << "," << fixed << setprecision(2) << price << "," << numOnHand;
     return oss.str();
-}// end toStringFile()
+}//end toStringFile()
 
 void GMItem::operator =(const GMItem& o) {
     name = o.name;
@@ -110,3 +110,26 @@ void GMItem::operator =(const GMItem& o) {
     code = o.code;
 }//end =()
 
+bool GMItem::operator ==(const GMItem& o) const {
+    return price == o.price;
+}//end ==()
+
+bool GMItem::operator !=(const GMItem& o) const {
+    return price != o.price;
+}//end !=()
+
+bool GMItem::operator <(const GMItem& o) const {
+    return price < o.price;
+}//end <()
+
+bool GMItem::operator <=(const GMItem& o) const {
+    return price <= o.price;
+}//end <=()
+
+bool GMItem::operator >(const GMItem& o) const {
+    return price > o.price;
+}//end >()
+
+bool GMItem::operator >=(const GMItem& o) const {
+    return price >= o.price;
+}//end >=()

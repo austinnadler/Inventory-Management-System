@@ -151,32 +151,7 @@ public:
         return elements[index];
     }// end
     /*----------------------------------------------------------------*/
-    void swap(E l, E r) { 
-        E temp = *l; 
-        *l = *r; 
-        *r = temp; 
     
-    } 
-    void sort() {
-        int i, j, minIndex; 
-        minIndex = 0;
-        for (i = 0; i < minIndex-1; i++) { 
-            // Find the minimum element in unsorted array 
-            minIndex = i; 
-            for (j = i+1; j < minIndex; j++) {
-                  if (elements[j] < elements[minIndex]){
-                    minIndex = j; 
-                  }
-            }
-              
-            // Swap the found minimum element with the first element 
-            // swap(&elements[minIndex], &elements[i]); 
-            E temp = elements[minIndex];
-            elements[minIndex] = elements[i];
-            elements[i] = temp;
-        } 
-    }
-
     int size() const     { return numberOfElements;      }// end size()
     bool isEmpty() const { return numberOfElements == 0; }// end isEmpty()
     /*----------------------------------------------------------------*/

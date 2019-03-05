@@ -19,7 +19,8 @@ class GMItem {
                const double& price = 0.0,
                const int& numOnHand = 0,
                const int& code = -1)
-        : name(name), price(price), numOnHand(numOnHand), code(code) {} //end ctor
+        : name(name), price(price), numOnHand(numOnHand), code(code) 
+        {} //end ctor
 
         virtual ~GMItem() {}//end ~GMItem()
 
@@ -31,9 +32,9 @@ class GMItem {
         virtual bool decreaseCount(const string& n = "1") final;
         virtual bool increaseCount(const string& n = "1") final;
         
-        virtual string getItemName()   const final  { return name; }//end getItemName()
-        virtual double getItemPrice()  const final  { return price; }//end getItemPrice()
-        virtual int getItemCode()      const final  { return code; }//end getItemCode
+        virtual string getItemName()   const final  { return name;      }//end getItemName()
+        virtual double getItemPrice()  const final  { return price;     }//end getItemPrice()
+        virtual int getItemCode()      const final  { return code;      }//end getItemCode
         virtual int getNumOnHand()     const final  { return numOnHand; }//end getNumOnHand()
         
         virtual int getMaxNameLength() const final  { return MAX_NAME_LENGTH; }//end getMaxNameLength()
@@ -44,23 +45,12 @@ class GMItem {
         virtual string toStringBack()  const; // make a new string in the same format as the input file is read in
 
         void operator =(const GMItem& o);
-        bool operator <(const GMItem& o) {
-            return price < o.price;
-        }//end <()
-
-        // bool operator <=(const GMItem& o) {
-        //     return o1.price <= o2.price;
-        // }//end <=()
-
-        // bool operator >(const GMItem& o) {
-        //     return o1.price > o2.price;
-        // }//end >()
-
-        // bool operator >=(const GMItem& o) {
-        //     return o1.price >= o2.price;
-        // }//end >=()
-
-
+        bool operator ==(const GMItem& o) const;
+        bool operator !=(const GMItem& o) const;
+        bool operator <(const GMItem& o) const;
+        bool operator <=(const GMItem& o) const;
+        bool operator >(const GMItem& o) const;
+        bool operator >=(const GMItem& o) const;
 };
 
 #endif

@@ -1,7 +1,6 @@
 // File: main.cpp
 
 // FIX: debug saving further
-// FIX: crea
 
 #include <iostream>
 #include <fstream>
@@ -21,7 +20,8 @@ void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(GMItem * itemPtr);
-bool isCodeTaken(List<GMItem*>& inventory, const int& code);       // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+void promptChangeNumberOnHand(GMItem * itemPtr);
+// These two get the List and the index because they to use Lists pushAt()
 void promptChangePrompt(List<GMItem*>& items, const int& index);
 void promptChangeMinAge(List<GMItem*>& items, const int& index);
 
@@ -32,13 +32,14 @@ bool promptAddGMItem(List<GMItem*>& items);
 bool promptAddPromptItem(List<GMItem*>& items);
 bool promptAddAgeRestrictedItem(List<GMItem*>& items);
 void promptDeleteItem(List <GMItem*>& items);                      
-void writeBack(ofstream& ofs, List<GMItem*>& items);               // writes to a new file with the same format as the example input file so it can be re-used.
-void printAdminInfo(List<GMItem*>& items);                         // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
-void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);       // take an ifs and an empty array and fill said array with items from a FORMATTED file
-void writeItems(ofstream& ofs, List<GMItem*>& items);              // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
-void save(ofstream& ofs, List<GMItem*>& items);                    // writeBack() and close file.
+void writeBack(ofstream& ofs, List<GMItem*>& items);                 // writes to a new file with the same format as the example input file so it can be re-used.
+void printAdminInfo(List<GMItem*>& items);                           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);         // take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
+bool isCodeTaken(List<GMItem*>& inventory, const int& code);         // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 
 /* Used in several functions */
 string inFileName = "items.csv"; // only used in loadItemFromFile(), here for organization
@@ -46,6 +47,7 @@ string outFileName = "itemsOut.csv";
 ifstream ifs; // only used in loadItemFromFile(), here for organization
 ofstream ofs;
 List<GMItem*> inventory;
+
 using namespace std;
 
 int main() {
@@ -63,7 +65,6 @@ int main() {
     }
 
     loadItemsFromFile(ifs, inventory); 
-    inventory.sort();
     do {
         //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
@@ -121,73 +122,7 @@ int main() {
                         return 0;
                     } else {
                         if(input == "1") {
-                            string input;
-                            bool valid = false;
-                            do {
-                                cout << endl
-                                     << "a. Add to the current count" << endl
-                                     << "b. Subtract from the current count" << endl
-                                     << "c. Enter a completely new count" << endl
-                                     << "Enter the character of the action you want to perform: ";
-                                getline(cin, input);
-                                
-                                if(input == "exit") {
-                                    save(ofs, inventory);
-                                    return 0;
-                                    } else {
-                                        if(input == "a") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                     << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                                                getline(cin, input);
-                                                valid = itemPtr->increaseCount(input);
-                                                if(!valid) {
-                                                    if(input == "exit") {
-                                                        save(ofs, inventory);
-                                                        return 0;
-                                                    } else {
-                                                        cerr << "Invalid input: " << input << endl;
-                                                    }  
-                                                }   
-                                            } while(!valid);
-                                        } else if (input == "b") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                    << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                                                getline(cin, input);
-                                                save(ofs, inventory);
-
-                                                if(input == "exit") {
-                                                    save(ofs, inventory);
-                                                    return 0;
-                                                } else {
-                                                    valid = itemPtr->decreaseCount(input);
-                                                    if(!valid) {
-                                                        cerr << "Invalid input: " << input << endl;
-                                                    }
-                                                }
-                                            } while(!valid);
-                                        } else if(input == "c") {
-                                            do {
-                                                cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
-                                                    << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
-                                                getline(cin, input);
-                                                if(input == "exit") {
-                                                    save(ofs, inventory);
-                                                    return 0;
-                                                } else {
-                                                    valid = itemPtr->setNumOnHand(input);
-                                                    if(!valid) {
-                                                        cerr << "Invalid input: " << input << endl;
-                                                    }
-                                                }
-                                            } while(!valid);
-                                        } else {
-                                            valid = false;
-                                        }
-                                    }                              
-                                } while(!valid && input != "exit");
-                                save(ofs, inventory); 
+                                promptChangeNumberOnHand(itemPtr);
                             } else if(input == "2") {
                                 promptChangePrice(itemPtr);    
                                 save(ofs, inventory);    
@@ -260,7 +195,75 @@ int main() {
 /*--------------------------------------------------------------*/
 /*------------------------ User Actions ------------------------*/
 /*--------------------------------------------------------------*/
+void promptChangeNumberOnHand(GMItem * itemPtr) {
+    string input;
+    bool valid = false;
+    do {
+        cout << endl
+                << "a. Add to the current count" << endl
+                << "b. Subtract from the current count" << endl
+                << "c. Enter a completely new count" << endl
+                << "Enter the character of the action you want to perform: ";
+        getline(cin, input);
+        
+        if(input == "exit") {
+            save(ofs, inventory);
+            return;
+            } else {
+                if(input == "a") {
+                    do {
+                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                                << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                        getline(cin, input);
+                        valid = itemPtr->increaseCount(input);
+                        if(!valid) {
+                            if(input == "exit") {
+                                save(ofs, inventory);
+                                return;
+                            } else {
+                                cerr << "Invalid input: " << input << endl;
+                            }  
+                        }   
+                    } while(!valid);
+                } else if (input == "b") {
+                    do {
+                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                            << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                        getline(cin, input);
+                        save(ofs, inventory);
 
+                        if(input == "exit") {
+                            save(ofs, inventory);
+                            return;
+                        } else {
+                            valid = itemPtr->decreaseCount(input);
+                            if(!valid) {
+                                cerr << "Invalid input: " << input << endl;
+                            }
+                        }
+                    } while(!valid);
+                } else if(input == "c") {
+                    do {
+                        cout << "\nEnter 'exit' to quit. Only integer values accepted." << endl
+                            << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+                        getline(cin, input);
+                        if(input == "exit") {
+                            save(ofs, inventory);
+                            return;
+                        } else {
+                            valid = itemPtr->setNumOnHand(input);
+                            if(!valid) {
+                                cerr << "Invalid input: " << input << endl;
+                            }
+                        }
+                    } while(!valid);
+            } else {
+                valid = false;
+            }
+        }                              
+    } while(!valid && input != "exit");
+    save(ofs, inventory); 
+}
 void promptChangeName(GMItem * itemPtr) {
     string input;
     bool valid = false;
@@ -390,7 +393,7 @@ void promptChangeCode(GMItem * item) {
     } while(!allGood);
 
     delete test;
-}//propmtChangeCode()
+}//promptChangeCode()
 
 void promptChangePrompt(List<GMItem*>& items, const int& index) {
     string input;
@@ -704,12 +707,6 @@ bool isCodeTaken(List<GMItem*>& items, const int& code) {
     }
     return false;
 }//end isCodeTaken() // FIX: Plan to impliment binary search
-
-// void sort(List<GMItem*>& items) {
-//     sort(items.begin(), items.end(), [](const GMItem* lhs, const GMItem* rhs) {
-//         return lhs->getItemCode() < rhs->getItemCode();
-//     });
-// }//end sort()
 
 void save(ofstream& ofs, List<GMItem*>& items) {
     openFileOut(ofs, outFileName);

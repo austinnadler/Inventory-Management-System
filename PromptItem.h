@@ -40,7 +40,6 @@ public:
     virtual string toStringBack() const;
 
     void operator =(const PromptItem& o);
-
 };
 
 #endif
