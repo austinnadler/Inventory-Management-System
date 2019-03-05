@@ -529,37 +529,32 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
 void promptDeleteItem(List<GMItem*>& items) {
     string input;
     int index;
-    int maxIndex = items.size() - 1;
     do {
-        do {
-            try {
-                cout << "Enter the index of them item you want to delete from the system: ";
-                getline(cin, input);
-                index = stoi(input);
-                if(index < 0 || index > maxIndex) {
-                    cerr << "Invalid index: " << input << endl;
-                }
-            }catch(invalid_argument e) {
-                cerr << "Invalid input: " << input << endl;
-            }
-        }while( index < 0 || index > maxIndex);
-
         try {
+            cout << "Enter the index of them item you want to delete from the system: ";
+            getline(cin, input);
             index = stoi(input);
-            cout << "CODE       NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-                 << items.getAt(index)->toStringAdmin() << endl
-                 << "Delete item? (y/n): ";
+            if(index < 0 || index > items.size()) {
+                cerr << "Invalid index: " << input << endl;
+            }
+        }catch(invalid_argument e) {
+            cerr << "Invalid input: " << input << endl;
+        }
+    } while( index < 0 || index > items.size());
+
+        index = stoi(input);
+        cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
+             << items.getAt(index)->toStringAdmin() << endl;
+        do {
+            cout << "Delete item? (y/n): ";
             getline(cin, input);
             if(input == "y") {
                 items.deleteAt(index);
                 save(ofs, items);
             } else if (input == "n") {
                 return;
-            }       
-        } catch (invalid_argument& e) {
-             cerr << "Invalid code entered: " << input;
-        }
-    } while (input != "y" && input != "n" && input != "exit");
+            }
+        } while(input != "y" && input != "n");
 }//end promptDeleteItem()
 
 /*-----------------------------------------------------------*/
