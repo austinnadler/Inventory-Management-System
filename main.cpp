@@ -355,7 +355,7 @@ void promptChangePrompt(List<GMItem*>& items, const int& index) {
                 newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
                 newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
                 newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
-                items.popAt(index);
+                items.deleteAt(index);
                 items.pushAt(index, newPtr);
             } else if(valid && prPtr != nullptr) {
                 valid = prPtr->setPrompt(input);
@@ -395,7 +395,7 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
                     newPtr->setItemCode(to_string(items.getAt(index)->getItemCode()));
                     newPtr->setItemPrice(to_string(items.getAt(index)->getItemPrice()));
                     newPtr->setNumOnHand(to_string(items.getAt(index)->getNumOnHand()));
-                    items.popAt(index);
+                    items.deleteAt(index);
                     items.pushAt(index, newPtr);
                 } else if(valid && arPtr != nullptr) {
                     valid = arPtr->setMinAge(input);
