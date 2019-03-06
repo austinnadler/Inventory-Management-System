@@ -39,7 +39,7 @@ void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a p
 void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
-bool isCodeTaken(List<GMItem*>& items, const int& code);         // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+bool isCodeTaken(List<GMItem*>& items, const int& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 
 /* Used in several functions */
 string inFileName = "items.csv";
@@ -66,22 +66,19 @@ int main() {
 
     loadItemsFromFile(ifs, inventory); 
     do {
-        //FIX: Maybe use iomanip here, but i found it easier to just have this fixed and have the objects' output be controlled by iomanip to fit here
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
-    // MENU 1
         cout << "----------|------------|----------------------|-----------|--------|--------------" << endl
+             << "This is the only menu from which you should try to exit this program!" << endl
              << "Enter the number of the action you want to perform." << endl
              << "1. Manage current inventory" << endl
              << "2. Add item" << endl
-             << "3. Delete an item" << endl
-             << "and at any time, you can enter 'exit' to back out to this menu." << endl << endl
+             << "3. Delete an item" << endl << endl
              << "Enter your choice: ";
         getline(cin, input);
 
         if(input == "exit") {
             save(ofs, inventory);
-            cout << "Exiting..." << endl;
             return 0;
         }
         
@@ -95,12 +92,7 @@ int main() {
                     try {
                         cout << "Enter the index of them item you want to edit: ";
                         getline(cin, input);
-                        if(input == "exit") {
-                            save(ofs, inventory);
-                            return 0;
-                        }
                         index = stoi(input);
-
                         if(index < 0 || index > maxIndex) {
                             cerr << "Invalid index: " << input << endl;
                         }
@@ -113,7 +105,8 @@ int main() {
                 found = true;
                 bool doneWithThisItem = false;
                 do {
-                    cout << "Item found: " << itemPtr->getItemName() << endl << endl
+                    do {
+                        cout << "Item found: " << itemPtr->getItemName() << endl << endl
                          << "1. Change number on hand" << endl
                          << "2. Change price" << endl
                          << "3. Change item name" << endl
@@ -121,55 +114,47 @@ int main() {
                          << "5. Change item prompt" << endl
                          << "6. Change item minimum age" << endl << endl
                          << "Enter the number of the action you want to perform: ";    
-                    getline(cin,input);
-
-                    if(input == "exit") {
+                        getline(cin,input);
+                    } while(input != "1" & input != "2" & input != "3" & input != "4" & input != "5" & input != "6");
+                    
+                    if(input == "1") {
+                        promptChangeNumberOnHand(itemPtr);
+                    } else if(input == "2") {
+                        promptChangePrice(itemPtr);    
+                        save(ofs, inventory);    
+                    } else if(input == "3") {
+                        promptChangeName(itemPtr);
+                        save(ofs, inventory);    
+                    } else if (input == "4") {
+                        promptChangeCode(itemPtr, inventory);
+                        save(ofs, inventory);    
+                    } else if(input == "5") {
+                        promptChangePrompt(inventory, index);
+                        save(ofs, inventory);    
+                    } else if(input == "6") {
+                        promptChangeMinAge(inventory, index);
+                        save(ofs, inventory);    
+                    } else if (input == "exit") {
                         save(ofs, inventory);
                         return 0;
-                    } else {
-                        if(input == "1") {
-                                promptChangeNumberOnHand(itemPtr);
-                            } else if(input == "2") {
-                                promptChangePrice(itemPtr);    
-                                save(ofs, inventory);    
-                            } else if(input == "3") {
-                                promptChangeName(itemPtr);
-                                save(ofs, inventory);    
-                            } else if (input == "4") {
-                                promptChangeCode(itemPtr, inventory);
-                                save(ofs, inventory);    
-                            } else if(input == "5") {
-                                promptChangePrompt(inventory, index);
-                                save(ofs, inventory);    
-                            } else if(input == "6") {
-                                promptChangeMinAge(inventory, index);
-                                save(ofs, inventory);    
-                            } else if (input == "exit") {
-                                save(ofs, inventory);
-                                return 0;
-                            }
-                        } 
-                        cout << "Done editing this item? (y/n): ";
-                        getline(cin, input);
-                        if(input == "n") {
-                            doneWithThisItem = false;
-                        } else if(input == "y") {
-                            doneWithThisItem = true;
-                        } 
-                    } while(!doneWithThisItem); 
+                    }
+                    cout << "Done editing this item? (y/n): ";
+                    getline(cin, input);
+                    if(input == "n") {
+                        doneWithThisItem = false; // just in case
+                    } else if(input == "y") {
+                        doneWithThisItem = true;
+                    } 
+                } while(!doneWithThisItem); 
                 found = false;
         } else if(input == "2") {
             bool valid = false;
             do {
                 cout << "a. A GMItem with no special characteristics." << endl
-                    << "b. A PromptItem with a prompt to be stored." << endl
-                    << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl
-                    << "Enter the character of your choice: ";
+                     << "b. A PromptItem with a prompt to be stored." << endl
+                     << "c. An AgeRestrictedItem that has a minimum purchaser age to store." << endl
+                     << "Enter the character of your choice: ";
                 getline(cin, input);
-                if(input == "exit") {
-                    save(ofs, inventory);
-                    return 0;
-                }
                 if(input == "a") {
                     valid = promptAddGMItem(inventory);
                 } else if (input == "b") {
