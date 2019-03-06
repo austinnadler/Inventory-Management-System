@@ -31,8 +31,7 @@ public:
     virtual ~AgeRestrictedItem() {}//end AgeRestrictedItem()
     
     virtual bool setMinAge(const string& minAge);
-
-    virtual int getMinAge() const  { return minAge; }//end getExpirationDate()
+    virtual int  getMinAge() const  { return minAge; }//end getExpirationDate()
     
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;

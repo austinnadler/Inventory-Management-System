@@ -134,7 +134,6 @@ public:
     
     int size() const     { return numberOfElements;      }// end size()
     bool isEmpty() const { return numberOfElements == 0; }// end isEmpty()
-
 };// end List
 
 

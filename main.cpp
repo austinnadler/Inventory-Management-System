@@ -24,7 +24,7 @@ void promptChangeNumberOnHand(GMItem * itemPtr);
 // These get the List and the index because they use Lists pushers
 void promptChangePrompt(List<GMItem*>& items, const int& index);
 void promptChangeMinAge(List<GMItem*>& items, const int& index);
-void promptDuplicateItem(List<GMItem*> items, const int& index);
+void promptDuplicateItem(List<GMItem*>& items, const int& index);
 
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
@@ -509,7 +509,7 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     return valid;
 }//end promptAddAgeRestrictedItem()
 
-void promptDuplicateItem(List<GMItem*> items, const int& index) {
+void promptDuplicateItem(List<GMItem*>& items, const int& index) {
     string input;
     bool validCode = false;
     GMItem * duplicate = new GMItem();
@@ -526,7 +526,7 @@ void promptDuplicateItem(List<GMItem*> items, const int& index) {
         }
     } while(!validCode);
     delete duplicate;
-    duplicate = items.getAt(index);
+    *duplicate = *items.getAt(index);
     duplicate->setItemCode(to_string(newCode));
     items.pushBack(duplicate);
 }
@@ -549,7 +549,7 @@ void promptDeleteItem(List<GMItem*>& items) {
 
     index = stoi(input);
     cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-            << items.getAt(index)->toStringAdmin() << endl;
+         << items.getAt(index)->toStringAdmin() << endl;
     do {
         cout << "Delete item? (y/n): ";
         getline(cin, input);
