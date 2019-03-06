@@ -28,7 +28,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index);
 
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
-void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid); //Prompt that all subclasses use first with error trapping
+void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand); //Prompt that all subclasses use first with error trapping
 bool promptAddGMItem(List<GMItem*>& items);
 bool promptAddPromptItem(List<GMItem*>& items);
 bool promptAddAgeRestrictedItem(List<GMItem*>& items);
@@ -386,9 +386,9 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
                 }
             } else if(input == "r") {
                 GMItem * newItemPtr = new GMItem(items.getAt(index)->getItemName(),
-                                                items.getAt(index)->getItemPrice(),
-                                                items.getAt(index)->getNumOnHand(),
-                                                items.getAt(index)->getItemCode());
+                                                 items.getAt(index)->getItemPrice(),
+                                                 items.getAt(index)->getNumOnHand(),
+                                                 items.getAt(index)->getItemCode());
                 items.deleteAt(index);
                 items.pushAt(index, newItemPtr);
                 valid = true;
@@ -397,7 +397,8 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
     } while(!valid);
 }//end promptChangeMinAge()
 
-void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand, bool& valid) {
+void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand) {
+    bool valid = false;
     string input;
     GMItem * test = new GMItem();
     
@@ -445,7 +446,7 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
 bool promptAddGMItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand;
-    promptGeneralPrompt(code, name, price, numOnHand, valid);
+    promptGeneralPrompt(code, name, price, numOnHand);
     GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
     try {
         items.pushBack(newPtr);
@@ -462,9 +463,9 @@ bool promptAddPromptItem(List<GMItem*>& items) {
     string code, name, price, numOnHand, prompt;
     PromptItem * newPtr = new PromptItem();
     // temp pointer used to validate
-    do {
-        promptGeneralPrompt(code, name, price, numOnHand, valid);
-        cout << "Enter the 50 character maximum prompt: ";
+    promptGeneralPrompt(code, name, price, numOnHand);
+    do {    
+        cout << "Enter the " << newPtr->MAX_PROMPT_LENGTH << " character maximum prompt: ";
         getline(cin, prompt);
         valid = newPtr->setPrompt(prompt);
         if (valid) {
@@ -487,9 +488,9 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, minAge;
     AgeRestrictedItem * newPtr = new AgeRestrictedItem();
+    promptGeneralPrompt(code, name, price, numOnHand);
     
     do {
-        promptGeneralPrompt(code, name, price, numOnHand, valid);
         cout << "Enter the new minimum age: ";
         getline(cin, minAge);
         valid = newPtr->setMinAge(minAge);
@@ -514,21 +515,55 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
     bool validCode = false;
     GMItem * duplicate = new GMItem();
     int newCode = 0;
-    do {
-        try {
-            cout << "Enter the new unique item code: ";
-            getline(cin, input);
-            newCode = stoi(input);
+    PromptItem * prPtr = nullptr;
+    AgeRestrictedItem * arPtr = nullptr;
+    prPtr = dynamic_cast<PromptItem*>(items.getAt(index));
+    arPtr = dynamic_cast<AgeRestrictedItem*>(items.getAt(index));
+    if(arPtr == nullptr && prPtr == nullptr) {
+        do {
+            bool codeSafe = false;
+            do {
+                cout << "Enter the new unique item code: ";
+                getline(cin, input);
+                codeSafe = duplicate->setItemCode(input);
+                newCode = stoi(input);
+            } while(!codeSafe);
             validCode = isCodeAvailible(items, stoi(input));
-        } catch(invalid_argument e) {
-            validCode = false;
-            cout << "Invalid input: " << input << endl;
-        }
-    } while(!validCode);
-    delete duplicate;
-    *duplicate = *items.getAt(index);
-    duplicate->setItemCode(to_string(newCode));
-    items.pushBack(duplicate);
+        } while(!validCode);
+        delete duplicate;
+        *duplicate = *items.getAt(index);
+        items.pushBack(duplicate); 
+    } else if(arPtr != nullptr && prPtr == nullptr) {
+         do {
+            bool codeSafe = false;
+            do {
+                cout << "Enter the new unique item code: ";
+                getline(cin, input);
+                codeSafe = duplicate->setItemCode(input);
+                newCode = stoi(input);
+            } while(!codeSafe);
+            validCode = isCodeAvailible(items, stoi(input));
+        } while(!validCode);
+        delete duplicate;
+        duplicate = new AgeRestrictedItem(arPtr->getMinAge(), arPtr->getItemName(), arPtr->getItemPrice(), arPtr->getNumOnHand());
+        duplicate->setItemCode(to_string(newCode));
+        items.pushBack(duplicate); 
+    } else if(arPtr == nullptr && prPtr != nullptr) {
+        do {
+            bool codeSafe = false;
+            do {
+                cout << "Enter the new unique item code: ";
+                getline(cin, input);
+                codeSafe = duplicate->setItemCode(input);
+                newCode = stoi(input);
+            } while(!codeSafe);
+            validCode = isCodeAvailible(items, stoi(input));
+        } while(!validCode);
+        delete duplicate;
+        duplicate = new PromptItem(prPtr->getPrompt(), prPtr->getItemName(), prPtr->getItemPrice(), prPtr->getNumOnHand());
+        duplicate->setItemCode(to_string(newCode));
+        items.pushBack(duplicate); 
+    }   
 }
 
 void promptDeleteItem(List<GMItem*>& items) {
