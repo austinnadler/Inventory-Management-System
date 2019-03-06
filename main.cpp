@@ -34,6 +34,7 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items);
 void promptDeleteItem(List <GMItem*>& items);                      
 void writeBack(ofstream& ofs, List<GMItem*>& items);                 // writes to a new file with the same format as the example input file so it can be re-used.
 void printAdminInfo(List<GMItem*>& items);                           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void printAdminSeperators();
 void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);         // take an ifs and an empty array and fill said array with items from a FORMATTED file
 void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
 void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
@@ -68,8 +69,8 @@ int main() {
     do {
         cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
-        cout << "----------|------------|----------------------|-----------|--------|--------------" << endl
-             << "This is the only menu from which you should try to exit this program!" << endl
+        printAdminSeperators();
+        cout << "This is the only menu from which you should try to exit this program!" << endl
              << "Enter the number of the action you want to perform." << endl
              << "1. Manage current inventory" << endl
              << "2. Add item" << endl
@@ -134,9 +135,6 @@ int main() {
                     } else if(input == "6") {
                         promptChangeMinAge(inventory, index);
                         save(ofs, inventory);    
-                    } else if (input == "exit") {
-                        save(ofs, inventory);
-                        return 0;
                     }
                     cout << "Done editing this item? (y/n): ";
                     getline(cin, input);
@@ -172,6 +170,7 @@ int main() {
 /*--------------------------------------------------------------*/
 /*------------------------ User Actions ------------------------*/
 /*--------------------------------------------------------------*/
+
 void promptChangeNumberOnHand(GMItem * itemPtr) {
     string input;
     bool valid = false;
@@ -182,40 +181,36 @@ void promptChangeNumberOnHand(GMItem * itemPtr) {
                 << "c. Enter a completely new count" << endl
                 << "Enter the character of the action you want to perform: ";
         getline(cin, input);
-        
-       
-                if(input == "a") {
-                    do {
-                        cout << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                        getline(cin, input);
-                        valid = itemPtr->increaseCount(input);
-                        if(!valid) {
-                            cerr << "Invalid input: " << input << endl;
-                        }   
-                    } while(!valid);
-                } else if (input == "b") {
-                    do {
-                        cout << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
-                        getline(cin, input);
-                        valid = itemPtr->decreaseCount(input);
-                        if(!valid) {
-                            cerr << "Invalid input: " << input << endl;
-                        }
-                        
-                    } while(!valid);
-                } else if(input == "c") {
-                    do {
-                        cout << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
-                        getline(cin, input);
-                        valid = itemPtr->setNumOnHand(input);
-                        if(!valid) {
-                            cerr << "Invalid input: " << input << endl;
-                        } 
-                    } while(!valid);
-            } else {
-                valid = false;
-            }
-                                      
+        if(input == "a") {
+            do {
+                cout << "Increase count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                getline(cin, input);
+                valid = itemPtr->increaseCount(input);
+                if(!valid) {
+                    cerr << "Invalid input: " << input << endl;
+                }   
+            } while(!valid);
+        } else if (input == "b") {
+            do {
+                cout << "Decrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
+                getline(cin, input);
+                valid = itemPtr->decreaseCount(input);
+                if(!valid) {
+                    cerr << "Invalid input: " << input << endl;
+                }
+            } while(!valid);
+        } else if(input == "c") {
+            do {
+                cout << "Enter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
+                getline(cin, input);
+                valid = itemPtr->setNumOnHand(input);
+                if(!valid) {
+                    cerr << "Invalid input: " << input << endl;
+                } 
+            } while(!valid);
+        } else {
+            valid = false;
+        }                       
     } while(!valid);
 }
 void promptChangeName(GMItem * itemPtr) {
@@ -264,7 +259,7 @@ void promptChangeCount(GMItem * itemPtr) {
                 cerr << "Invalid input: " << input << endl;
             }
         } while(!valid);
-    valid = false;
+        valid = false;
     } else if (input == "b") {
         do {
             cout << "\nDecrease count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << " by: ";
@@ -274,7 +269,7 @@ void promptChangeCount(GMItem * itemPtr) {
                 cerr << "Invalid input: " << input << endl;
             } 
         } while(!valid);
-    valid = false;     
+        valid = false;     
     } else if(input == "c") {
         do {
             cout << "\nEnter the new on hand count for item " << itemPtr->getItemName() << " " << itemPtr->getItemCode() << ": ";
@@ -284,7 +279,7 @@ void promptChangeCount(GMItem * itemPtr) {
                 cerr << "Invalid input: " << input << endl;
             }
         } while(!valid);
-    valid = false;
+        valid = false;
     }
 }//end promptChangeCount()
 
@@ -439,7 +434,6 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
         }
     } while(!valid);     
 
-    
     delete test;
 }//end promptChangeMinAge()
 
@@ -461,16 +455,17 @@ bool promptAddGMItem(List<GMItem*>& items) {
 bool promptAddPromptItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, prompt;
-    PromptItem * test = new PromptItem();
-    
+    PromptItem * newPtr = new PromptItem();
+    // temp pointer used to validate
     do {
         promptGeneralPrompt(code, name, price, numOnHand, valid);
-        cout << "Enter the 20 character maximum prompt: ";
+        cout << "Enter the 50 character maximum prompt: ";
         getline(cin, prompt);
-        valid = test->setPrompt(prompt);
+        valid = newPtr->setPrompt(prompt);
         if (valid) {
             try {
-                PromptItem * newPtr = new PromptItem(prompt, name, stod(price), stoi(numOnHand), stoi(code));
+                delete newPtr;
+                newPtr = new PromptItem(prompt, name, stod(price), stoi(numOnHand), stoi(code));
                 items.pushBack(newPtr);
                 valid = true;
             } catch (invalid_argument& e) {
@@ -480,22 +475,22 @@ bool promptAddPromptItem(List<GMItem*>& items) {
         }
     } while(!valid);     
     save(ofs, items);
-    delete test;
     return valid;
 }//end promptAddPromptItem()
 
 bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, minAge;
-    AgeRestrictedItem * test = new AgeRestrictedItem();
+    AgeRestrictedItem * newPtr = new AgeRestrictedItem();
     
     do {
         promptGeneralPrompt(code, name, price, numOnHand, valid);
         cout << "Enter the new minimum age: ";
         getline(cin, minAge);
-        valid = test->setMinAge(minAge);
+        valid = newPtr->setMinAge(minAge);
         if (valid) {
             try {
+                delete newPtr;
                 AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
                 items.pushBack(newPtr);
                 valid = true;
@@ -506,7 +501,6 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
         }
     } while(!valid);           
     save(ofs, items);
-    delete test;
     return valid;
 }//end promptAddAgeRestrictedItem()
 
@@ -526,19 +520,19 @@ void promptDeleteItem(List<GMItem*>& items) {
         }
     } while( index < 0 || index > items.size());
 
-        index = stoi(input);
-        cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-             << items.getAt(index)->toStringAdmin() << endl;
-        do {
-            cout << "Delete item? (y/n): ";
-            getline(cin, input);
-            if(input == "y") {
-                items.deleteAt(index);
-                save(ofs, items);
-            } else if (input == "n") {
-                return;
-            }
-        } while(input != "y" && input != "n");
+    index = stoi(input);
+    cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
+            << items.getAt(index)->toStringAdmin() << endl;
+    do {
+        cout << "Delete item? (y/n): ";
+        getline(cin, input);
+        if(input == "y") {
+            items.deleteAt(index);
+            save(ofs, items);
+        } else if (input == "n") {
+            return;
+        }
+    } while(input != "y" && input != "n");
 }//end promptDeleteItem()
 
 /*-----------------------------------------------------------*/
@@ -599,12 +593,16 @@ void writeBack(ofstream& ofs, List<GMItem*>& items) {
     for(int i = 0; i < items.size(); i++) {
         ofs << items.getAt(i)->toStringBack() << endl;
     }
-    // DOES NOT CLOSE FILE! THIS IS INTENTIONAL SO THAT MULTIPLE CHANGES CAN BE MADE!
+    // Doesn't close the file.
 }//end writeItems()
+
+void printAdminSeperators() {
+    cout << "----------|------------|----------------------|-----------|--------|--------------" << endl;
+}
 
 void printAdminInfo(List<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
-        cout << "----------|------------|----------------------|-----------|--------|--------------" << endl;
+        printAdminSeperators();
         cout << setw(10) << left << i << "| " << items.getAt(i)->toStringAdmin() << endl;
     }
 }
