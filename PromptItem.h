@@ -13,7 +13,7 @@ private:
     string prompt;
     
 public:
-    const int MAX_PROMPT_LENGTH = 35;
+    const int MAX_PROMPT_LENGTH = 50;
     PromptItem(const PromptItem& copy) { 
         name = copy.name;
         price = copy.price;
@@ -32,7 +32,7 @@ public:
     virtual ~PromptItem() {}//end PromptItem()
 
     virtual string getPrompt() const   { return prompt; }//end getExpirationDate()
-    virtual bool setPrompt(const string& prompt); // any format, but must be short than 20 characters
+    virtual bool   setPrompt(const string& prompt); // any format, but must be short than 50 characters
 
     virtual string toStringAdmin() const;
     virtual string toStringFile() const;

@@ -113,10 +113,11 @@ int main() {
                          << "3. Change item name" << endl
                          << "4. Change item code" << endl
                          << "5. Change item prompt" << endl
-                         << "6. Change item minimum age" << endl << endl
+                         << "6. Change item minimum age" << endl
+                         << "7. Duplicate this item" << endl
                          << "Enter the number of the action you want to perform: ";    
                         getline(cin,input);
-                    } while(input != "1" & input != "2" & input != "3" & input != "4" & input != "5" & input != "6");
+                    } while(input != "1" & input != "2" & input != "3" & input != "4" & input != "5" & input != "6" & input != "7"); // Better than a bunch of if else
                     
                     if(input == "1") {
                         promptChangeNumberOnHand(itemPtr);
@@ -135,6 +136,25 @@ int main() {
                     } else if(input == "6") {
                         promptChangeMinAge(inventory, index);
                         save(ofs, inventory);    
+                    } else if(input == "7") {
+                        bool validCode = false;
+                        GMItem * duplicate = new GMItem();
+                        int newCode = 0;
+                        do {
+                            try {
+                                cout << "Enter the new unique item code: ";
+                                getline(cin, input);
+                                newCode = stoi(input);
+                                validCode = isCodeTaken(inventory, stoi(input));
+                            } catch(invalid_argument e) {
+                                validCode = false;
+                                cout << "Invalid input: " << input << endl;
+                            }
+                        } while(!validCode);
+                        delete duplicate;
+                        duplicate = inventory.getAt(index);
+                        inventory.getAt(index)->setItemCode(to_string(newCode));
+                        inventory.pushBack(duplicate);
                     }
                     cout << "Done editing this item? (y/n): ";
                     getline(cin, input);
