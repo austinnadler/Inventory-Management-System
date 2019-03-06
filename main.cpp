@@ -21,9 +21,10 @@ void promptChangeName(GMItem * itemPtr);
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(GMItem * itemPtr, List<GMItem*> items);
 void promptChangeNumberOnHand(GMItem * itemPtr);
-// These two get the List and the index because they use Lists pushAt()
+// These get the List and the index because they use Lists pushers
 void promptChangePrompt(List<GMItem*>& items, const int& index);
 void promptChangeMinAge(List<GMItem*>& items, const int& index);
+void promptDuplicateItem(List<GMItem*> items, const int& index);
 
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
@@ -40,7 +41,7 @@ void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a p
 void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
-bool isCodeTaken(List<GMItem*>& items, const int& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+bool isCodeAvailible(List<GMItem*>& items, const int& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 
 /* Used in several functions */
 string inFileName = "items.csv";
@@ -114,7 +115,7 @@ int main() {
                          << "4. Change item code" << endl
                          << "5. Change item prompt" << endl
                          << "6. Change item minimum age" << endl
-                         << "7. Duplicate this item" << endl
+                         << "7. Duplicate this item (when creating similar item)" << endl
                          << "Enter the number of the action you want to perform: ";    
                         getline(cin,input);
                     } while(input != "1" & input != "2" & input != "3" & input != "4" & input != "5" & input != "6" & input != "7"); // Better than a bunch of if else
@@ -137,24 +138,8 @@ int main() {
                         promptChangeMinAge(inventory, index);
                         save(ofs, inventory);    
                     } else if(input == "7") {
-                        bool validCode = false;
-                        GMItem * duplicate = new GMItem();
-                        int newCode = 0;
-                        do {
-                            try {
-                                cout << "Enter the new unique item code: ";
-                                getline(cin, input);
-                                newCode = stoi(input);
-                                validCode = isCodeTaken(inventory, stoi(input));
-                            } catch(invalid_argument e) {
-                                validCode = false;
-                                cout << "Invalid input: " << input << endl;
-                            }
-                        } while(!validCode);
-                        delete duplicate;
-                        duplicate = inventory.getAt(index);
-                        inventory.getAt(index)->setItemCode(to_string(newCode));
-                        inventory.pushBack(duplicate);
+                        promptDuplicateItem(inventory, index);
+                        save(ofs, inventory);
                     }
                     cout << "Done editing this item? (y/n): ";
                     getline(cin, input);
@@ -316,7 +301,7 @@ void promptChangeCode(GMItem * itemPtr, List<GMItem*> inventory) {
         } while(!isInt);
 
         if(isInt) {
-            isTaken = isCodeTaken(inventory, stoi(input));
+            isTaken = isCodeAvailible(inventory, stoi(input));
             if(isTaken) {
                 cout << "Code " << input << " is already taken." << endl;
             } else {
@@ -524,6 +509,28 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     return valid;
 }//end promptAddAgeRestrictedItem()
 
+void promptDuplicateItem(List<GMItem*> items, const int& index) {
+    string input;
+    bool validCode = false;
+    GMItem * duplicate = new GMItem();
+    int newCode = 0;
+    do {
+        try {
+            cout << "Enter the new unique item code: ";
+            getline(cin, input);
+            newCode = stoi(input);
+            validCode = isCodeAvailible(items, stoi(input));
+        } catch(invalid_argument e) {
+            validCode = false;
+            cout << "Invalid input: " << input << endl;
+        }
+    } while(!validCode);
+    delete duplicate;
+    duplicate = items.getAt(index);
+    duplicate->setItemCode(to_string(newCode));
+    items.pushBack(duplicate);
+}
+
 void promptDeleteItem(List<GMItem*>& items) {
     string input;
     int index;
@@ -637,14 +644,14 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     return ofs.is_open();
 }//end openFileOut()
 
-bool isCodeTaken(List<GMItem*>& items, const int& code) { 
+bool isCodeAvailible(List<GMItem*>& items, const int& code) { 
     for(int i = 0; i < items.size(); i++) {
         if(items.getAt(i)->getItemCode() == code) {
-            return true;
+            return false;
         }
     }
-    return false;
-}//end isCodeTaken() // FIX: Plan to impliment binary search
+    return true;
+}//end isCodeAvailible() // FIX: Plan to impliment binary search
 
 void save(ofstream& ofs, List<GMItem*>& items) {
     openFileOut(ofs, outFileName);
