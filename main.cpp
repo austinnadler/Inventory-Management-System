@@ -656,13 +656,13 @@ void writeBack(ofstream& ofs, List<GMItem*>& items) {
 }//end writeItems()
 
 void printAdminSeperators() {
-    cout << "----------|------------|----------------------|-----------|--------|--------------" << endl;
+    cout << "|----------|------------|----------------------|-----------|--------|--------------------------------------------------------------|" << endl;
 }
 
 void printAdminInfo(List<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
         printAdminSeperators();
-        cout << setw(10) << left << i << "| " << items.getAt(i)->toStringAdmin() << endl;
+        cout << "| " << setw(9) << left << i << "| " << items.getAt(i)->toStringAdmin() << endl;
     }
 }
 
