@@ -68,7 +68,7 @@ int main() {
 
     loadItemsFromFile(ifs, inventory); 
     do {
-        cout << "INDEX      CODE         NAME                  PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
+        cout << " INDEX      CODE         NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
         printAdminInfo(inventory);
         printAdminSeperators();
         cout << "This is the only menu from which you should try to exit this program!" << endl
