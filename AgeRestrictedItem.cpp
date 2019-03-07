@@ -24,7 +24,7 @@ string AgeRestrictedItem::toStringBack() const {
 
 string AgeRestrictedItem::toStringAdmin() const {
     ostringstream oss;
-    oss << GMItem::toStringAdmin() <<  " Minimum Age: " << right << getMinAge() << " years" ;
+    oss << setw(10) << left << code << " | " << setw(20) << name  << right << " |" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |" <<  " Minimum Age: " << right << setw(41) << getMinAge() << " years" << " |";
     return oss.str();
 }//end toStringAdmin()
 

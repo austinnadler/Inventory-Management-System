@@ -28,7 +28,7 @@ string PromptItem::toStringBack() const {
 
 string PromptItem::toStringAdmin() const {
     ostringstream oss;
-    oss << GMItem::toStringAdmin() << " Prompt: " << "\"" << getPrompt() << "\"";
+    oss << setw(10) << left << code << " | " << setw(20) << name << " |" << setw(10) << right << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |" << " Prompt: " << right << setw(52) << getPrompt() << " |";
     return oss.str();
 }// and toStringAdmin()
 
