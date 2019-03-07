@@ -28,7 +28,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index);
 
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
-void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand); //Prompt that all subclasses use first with error trapping
+void promptGeneralPrompt(List<GMItem*>& list, string& code, string& name, string& price, string& numOnHand);
 bool promptAddGMItem(List<GMItem*>& items);
 bool promptAddPromptItem(List<GMItem*>& items);
 bool promptAddAgeRestrictedItem(List<GMItem*>& items);
@@ -397,18 +397,22 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
     } while(!valid);
 }//end promptChangeMinAge()
 
-void promptGeneralPrompt(string& code, string& name, string& price, string& numOnHand) {
+void promptGeneralPrompt(List<GMItem*>& items, string& code, string& name, string& price, string& numOnHand) {
     bool valid = false;
     string input;
     GMItem * test = new GMItem();
     
     do {
-        cout << "Enter the code (" << test->CODE_MAX_DIGITS << " digits or less): ";
-        getline(cin, input);
-        valid = test->setItemCode(input);
-        if(valid) {
-            code = input;
-        }
+        bool codeSafe = false;
+        do {
+            cout << "Enter the code (" << test->CODE_MAX_DIGITS << " digits or less): ";
+            getline(cin, input);
+            valid = test->setItemCode(input);
+            if(valid) {
+                code = input;
+            }
+            codeSafe = isCodeAvailible(items, stoi(input));
+        } while(!codeSafe);
     } while(!valid);
     valid = false;
 
@@ -444,9 +448,8 @@ void promptGeneralPrompt(string& code, string& name, string& price, string& numO
 }//end promptChangeMinAge()
 
 bool promptAddGMItem(List<GMItem*>& items) {
-    bool valid = false;
     string code, name, price, numOnHand;
-    promptGeneralPrompt(code, name, price, numOnHand);
+    promptGeneralPrompt(items, code, name, price, numOnHand);
     GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
     try {
         items.pushBack(newPtr);
@@ -463,7 +466,7 @@ bool promptAddPromptItem(List<GMItem*>& items) {
     string code, name, price, numOnHand, prompt;
     PromptItem * newPtr = new PromptItem();
     // temp pointer used to validate
-    promptGeneralPrompt(code, name, price, numOnHand);
+    promptGeneralPrompt(items, code, name, price, numOnHand);
     do {    
         cout << "Enter the " << newPtr->MAX_PROMPT_LENGTH << " character maximum prompt: ";
         getline(cin, prompt);
@@ -488,22 +491,15 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, minAge;
     AgeRestrictedItem * newPtr = new AgeRestrictedItem();
-    promptGeneralPrompt(code, name, price, numOnHand);
-    
+    promptGeneralPrompt(items, code, name, price, numOnHand);
     do {
         cout << "Enter the new minimum age: ";
         getline(cin, minAge);
         valid = newPtr->setMinAge(minAge);
         if (valid) {
-            try {
-                delete newPtr;
-                AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
-                items.pushBack(newPtr);
-                valid = true;
-            } catch (invalid_argument& e) {
-                cerr << "One or more arguments were invalid. Try again." << endl;
-                valid = false;
-            }
+            delete newPtr;
+            AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
+            items.pushBack(newPtr);
         }
     } while(!valid);           
     save(ofs, items);
@@ -558,6 +554,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
                 newCode = stoi(input);
             } while(!codeSafe);
             validCode = isCodeAvailible(items, stoi(input));
+
         } while(!validCode);
         delete duplicate;
         duplicate = new PromptItem(prPtr->getPrompt(), prPtr->getItemName(), prPtr->getItemPrice(), prPtr->getNumOnHand());
