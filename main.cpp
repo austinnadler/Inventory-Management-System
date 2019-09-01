@@ -28,33 +28,32 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index);
 
 /* Functions to add items to the inventory system */
 /* Created to simplify the main method            */
-void promptGeneralPrompt(List<GMItem*>& list, string& code, string& name, string& price, string& numOnHand);
+void promptGeneralPrompt(List<GMItem*>& List, string& code, string& name, string& price, string& numOnHand);
 bool promptAddGMItem(List<GMItem*>& items);
 bool promptAddPromptItem(List<GMItem*>& items);
 bool promptAddAgeRestrictedItem(List<GMItem*>& items);
 void promptDeleteItem(List <GMItem*>& items);                      
 void writeBack(ofstream& ofs, List<GMItem*>& items);                 // writes to a new file with the same format as the example input file so it can be re-used.
-void printAdminInfo(List<GMItem*>& items);                           // outputs to the screen the list of objects with all special information, for use in performAdminFunctions()
+void printAdminInfo(List<GMItem*>& items);                           // outputs to the screen the List of objects with all special information, for use in performAdminFunctions()
 void printAdminSeperators();
 void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);         // take an ifs and an empty array and fill said array with items from a FORMATTED file
 void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
 void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
-bool isCodeAvailible(List<GMItem*>& items, const int& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+bool isCodeAvailible(List<GMItem*>& items, const string& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
 
 /* Used in several functions */
 string inFileName = "items.csv";
 string outFileName = "itemsOut.csv";
 ifstream ifs;
 ofstream ofs;
-
 using namespace std;
 
 int main() {
     List<GMItem*> inventory;
     string input;
-    // cout << "Enter the inventory list file name with extension: ";
+    // cout << "Enter the inventory List file name with extension: ";
     // getline(cin, inFileName);
     bool found = false;
     cout << "Opening file " << inFileName << "..." << endl;
@@ -75,7 +74,8 @@ int main() {
              << "Enter the number of the action you want to perform." << endl
              << "1. Manage current inventory" << endl
              << "2. Add item" << endl
-             << "3. Delete an item" << endl << endl
+             << "3. Delete an item" << endl
+             << "'exit' to quit" << endl << endl
              << "Enter your choice: ";
         getline(cin, input);
 
@@ -98,7 +98,7 @@ int main() {
                         if(index < 0 || index > maxIndex) {
                             cerr << "Invalid index: " << input << endl;
                         }
-                    }catch(invalid_argument e) {
+                    } catch(invalid_argument& e) {
                         cerr << "Invalid input: " << input << endl;
                     }
                 }while( index < 0 || index > maxIndex);
@@ -140,8 +140,9 @@ int main() {
                     } else if(input == "7") {
                         promptDuplicateItem(inventory, index);
                         save(ofs, inventory);
+                        cout << "Item duplicated. Exit this function and select the new item's index to edit it." << endl;
                     }
-                    cout << "Done editing this item? (y/n): ";
+                    cout << "Done editing this item? (at index: " << index << ") (y/n): ";
                     getline(cin, input);
                     if(input == "n") {
                         doneWithThisItem = false; // just in case
@@ -290,30 +291,17 @@ void promptChangeCount(GMItem * itemPtr) {
 
 void promptChangeCode(GMItem * itemPtr, List<GMItem*> inventory) {
     string input;
-    bool isInt = false;
-    bool isTaken = true;
-    bool allGood = false;
-    do {
+    bool validCode = false;
         do {
-            cout << "Enter the new item code. This must be " << itemPtr->CODE_MAX_DIGITS <<  " digits or shorter: ";
-            getline(cin, input);
-            isInt = itemPtr->setItemCode(input);
-        } while(!isInt);
-
-        if(isInt) {
-            isTaken = isCodeAvailible(inventory, stoi(input));
-            if(isTaken) {
-                cout << "Code " << input << " is already taken." << endl;
-            } else {
-                itemPtr->setItemCode(input);
+            try {
+                cout << "Enter the new unique item code: ";
+                getline(cin, input);
+                validCode = isCodeAvailible(inventory, input);
+            } catch(invalid_argument& e) {
+                cerr << "Invalid input " << input << endl;
             }
-        }
-
-        if(isInt && !isTaken) {
-            allGood = true;
-            save(ofs, inventory);
-        }
-    } while(!allGood);
+        } while(!validCode);
+        
 }//promptChangeCode()
 
 void promptChangePrompt(List<GMItem*>& items, const int& index) {
@@ -403,16 +391,12 @@ void promptGeneralPrompt(List<GMItem*>& items, string& code, string& name, strin
     GMItem * test = new GMItem();
     
     do {
-        bool codeSafe = false;
-        do {
             cout << "Enter the code (" << test->CODE_MAX_DIGITS << " digits or less): ";
             getline(cin, input);
-            valid = test->setItemCode(input);
+            valid = isCodeAvailible(items, input);
             if(valid) {
                 code = input;
             }
-            codeSafe = isCodeAvailible(items, stoi(input));
-        } while(!codeSafe);
     } while(!valid);
     valid = false;
 
@@ -455,8 +439,8 @@ bool promptAddGMItem(List<GMItem*>& items) {
         items.pushBack(newPtr);
         save(ofs, items);
         return true;
-    } catch (exception e) {
-        cerr << "Error adding to list" << endl;
+    } catch (exception& e) { // Memory error
+        cerr << "Error adding to List" << endl;
         return false;
     }
 }//end promptAddGMItem()
@@ -524,9 +508,8 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
                 codeSafe = duplicate->setItemCode(input);
                 newCode = stoi(input);
             } while(!codeSafe);
-            validCode = isCodeAvailible(items, stoi(input));
+            validCode = isCodeAvailible(items, input);
         } while(!validCode);
-        delete duplicate;
         *duplicate = *items.getAt(index);
         items.pushBack(duplicate); 
     } else if(arPtr != nullptr && prPtr == nullptr) {
@@ -538,7 +521,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
                 codeSafe = duplicate->setItemCode(input);
                 newCode = stoi(input);
             } while(!codeSafe);
-            validCode = isCodeAvailible(items, stoi(input));
+            validCode = isCodeAvailible(items, input);
         } while(!validCode);
         delete duplicate;
         duplicate = new AgeRestrictedItem(arPtr->getMinAge(), arPtr->getItemName(), arPtr->getItemPrice(), arPtr->getNumOnHand());
@@ -553,8 +536,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
                 codeSafe = duplicate->setItemCode(input);
                 newCode = stoi(input);
             } while(!codeSafe);
-            validCode = isCodeAvailible(items, stoi(input));
-
+            validCode = isCodeAvailible(items, input);
         } while(!validCode);
         delete duplicate;
         duplicate = new PromptItem(prPtr->getPrompt(), prPtr->getItemName(), prPtr->getItemPrice(), prPtr->getNumOnHand());
@@ -574,7 +556,7 @@ void promptDeleteItem(List<GMItem*>& items) {
             if(index < 0 || index > items.size()) {
                 cerr << "Invalid index: " << input << endl;
             }
-        }catch(invalid_argument e) {
+        } catch(invalid_argument& e) {
             cerr << "Invalid input: " << input << endl;
         }
     } while( index < 0 || index > items.size());
@@ -676,13 +658,21 @@ file_status_t openFileOut(ofstream& ofs, const string& fileName){
     return ofs.is_open();
 }//end openFileOut()
 
-bool isCodeAvailible(List<GMItem*>& items, const int& code) { 
-    for(int i = 0; i < items.size(); i++) {
-        if(items.getAt(i)->getItemCode() == code) {
-            return false;
+bool isCodeAvailible(List<GMItem*>& items, const string& code) { 
+    
+    try {
+        int icode = stoi(code);
+        for(int i = 0; i < items.size(); i++) {
+            if(items.getAt(i)->getItemCode() == icode) {
+                return false;
+            }
         }
+        return true;
+    } catch (invalid_argument& e) {
+        return false;
     }
-    return true;
+    
+    
 }//end isCodeAvailible() // FIX: Plan to impliment binary search
 
 void save(ofstream& ofs, List<GMItem*>& items) {
