@@ -12,16 +12,14 @@
 #include "PromptItem.h"
 #include "AgeRestrictedItem.h"
 using file_status_t = bool;
-using total_price_t = double;
 
-/* Loops that call their respective setters when editing items in the inventory system */
-/* Created to simplify the main method                                                 */
+// Loops that call their respective setters when editing items in the inventory system                                               
 void promptChangeCount(GMItem * itemPtr);
 void promptChangeName(GMItem * itemPtr);    
 void promptChangePrice(GMItem * itemPtr);
 void promptChangeCode(GMItem * itemPtr, List<GMItem*> items);
 void promptChangeNumberOnHand(GMItem * itemPtr);
-// These get the List and the index because they use Lists pushers
+// These need the List and the index (instead of an item ptr) because they use Lists pushers
 void promptChangePrompt(List<GMItem*>& items, const int& index);
 void promptChangeMinAge(List<GMItem*>& items, const int& index);
 void promptDuplicateItem(List<GMItem*>& items, const int& index);
@@ -33,15 +31,16 @@ bool promptAddGMItem(List<GMItem*>& items);
 bool promptAddPromptItem(List<GMItem*>& items);
 bool promptAddAgeRestrictedItem(List<GMItem*>& items);
 void promptDeleteItem(List <GMItem*>& items);                      
-void writeBack(ofstream& ofs, List<GMItem*>& items);                 // writes to a new file with the same format as the example input file so it can be re-used.
-void printAdminInfo(List<GMItem*>& items);                           // outputs to the screen the List of objects with all special information, for use in performAdminFunctions()
-void printAdminSeperators();
-void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);         // take an ifs and an empty array and fill said array with items from a FORMATTED file
-void writeItems(ofstream& ofs, List<GMItem*>& items);                // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
-void save(ofstream& ofs, List<GMItem*>& items);                      // writeBack() and close file.
-file_status_t openFileIn(ifstream& ifs, const string& fileName);     // use provided ifstream to open provided filename to read information from
-file_status_t openFileOut(ofstream& ofs, const string& fileName);    // use provided ofstream to open provided filename to write data to
-bool isCodeAvailible(List<GMItem*>& items, const string& code);             // Was planning to impliment a binary search, but this takes less than a second even with over 1 million items, so its good enough
+void writeBack(ofstream& ofs, List<GMItem*>& items);                // writes to a new file with the same format as the example input file so it can be re-used.
+void printInfo(List<GMItem*>& items);                               // outputs to the screen the List of objects with all special information, for use in performAdminFunctions()
+void printHeader();
+void printBorders();
+void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);        // take an ifs and an empty array and fill said array with items from a FORMATTED file
+void writeItems(ofstream& ofs, List<GMItem*>& items);               // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
+void save(ofstream& ofs, List<GMItem*>& items);                     // writeBack() and close file.
+file_status_t openFileIn(ifstream& ifs, const string& fileName);    // use provided ifstream to open provided filename to read information from
+file_status_t openFileOut(ofstream& ofs, const string& fileName);   // use provided ofstream to open provided filename to write data to
+bool isCodeAvailible(List<GMItem*>& items, const string& code);     // check if item code is already taken
 
 /* Used in several functions */
 string inFileName = "items.csv";
@@ -67,9 +66,9 @@ int main() {
 
     loadItemsFromFile(ifs, inventory); 
     do {
-        cout << " INDEX      CODE         NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
-        printAdminInfo(inventory);
-        printAdminSeperators();
+        printHeader();
+        printInfo(inventory);
+        printBorders();
         cout << "This is the only menu from which you should try to exit this program!" << endl
              << "Enter the number of the action you want to perform." << endl
              << "1. Manage current inventory" << endl
@@ -101,7 +100,7 @@ int main() {
                     } catch(invalid_argument& e) {
                         cerr << "Invalid input: " << input << endl;
                     }
-                }while( index < 0 || index > maxIndex);
+                } while( index < 0 || index > maxIndex);
 
                 GMItem * itemPtr = inventory.getAt(index);
                 found = true;
@@ -388,8 +387,8 @@ void promptChangeMinAge(List<GMItem*>& items, const int& index) {
 void promptGeneralPrompt(List<GMItem*>& items, string& code, string& name, string& price, string& numOnHand) {
     bool valid = false;
     string input;
-    GMItem * test = new GMItem();
-    
+    GMItem * test = new GMItem();   // temp ptr to check validity of attributes
+
     do {
             cout << "Enter the code (" << test->CODE_MAX_DIGITS << " digits or less): ";
             getline(cin, input);
@@ -401,7 +400,7 @@ void promptGeneralPrompt(List<GMItem*>& items, string& code, string& name, strin
     valid = false;
 
     do {
-        cout << "Enter the name ("  << test->MAX_NAME_LENGTH << " characters or less): ";
+        cout << "Enter the item name ("  << test->MAX_NAME_LENGTH << " characters or less): ";
         getline(cin, input);
         valid = test->setItemName(input);
         if(valid) {
@@ -448,8 +447,7 @@ bool promptAddGMItem(List<GMItem*>& items) {
 bool promptAddPromptItem(List<GMItem*>& items) {
     bool valid = false;
     string code, name, price, numOnHand, prompt;
-    PromptItem * newPtr = new PromptItem();
-    // temp pointer used to validate
+    PromptItem * newPtr = new PromptItem(); // temp ptr used to validate
     promptGeneralPrompt(items, code, name, price, numOnHand);
     do {    
         cout << "Enter the " << newPtr->MAX_PROMPT_LENGTH << " character maximum prompt: ";
@@ -497,7 +495,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
     int newCode = 0;
     PromptItem * prPtr = nullptr;
     AgeRestrictedItem * arPtr = nullptr;
-    prPtr = dynamic_cast<PromptItem*>(items.getAt(index));
+    prPtr = dynamic_cast<PromptItem*>(items.getAt(index));          // RTTI to determine type of item
     arPtr = dynamic_cast<AgeRestrictedItem*>(items.getAt(index));
     if(arPtr == nullptr && prPtr == nullptr) {
         do {
@@ -506,6 +504,7 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
                 cout << "Enter the new unique item code: ";
                 getline(cin, input);
                 codeSafe = duplicate->setItemCode(input);
+                duplicate->setItemCode(input);
                 newCode = stoi(input);
             } while(!codeSafe);
             validCode = isCodeAvailible(items, input);
@@ -562,8 +561,8 @@ void promptDeleteItem(List<GMItem*>& items) {
     } while( index < 0 || index > items.size());
 
     index = stoi(input);
-    cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl
-         << items.getAt(index)->toStringAdmin() << endl;
+    printHeader();
+    cout << items.getAt(index)->toStringAdmin() << endl;
     do {
         cout << "Delete item? (y/n): ";
         getline(cin, input);
@@ -636,14 +635,17 @@ void writeBack(ofstream& ofs, List<GMItem*>& items) {
     }
     // Doesn't close the file.
 }//end writeItems()
+void printHeader() {
+    cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
+}
 
-void printAdminSeperators() {
+void printBorders() {
     cout << "|----------|------------|----------------------|-----------|--------|--------------------------------------------------------------|" << endl;
 }
 
-void printAdminInfo(List<GMItem*>& items) {
+void printInfo(List<GMItem*>& items) {
      for(int i = 0; i < items.size(); i++) {
-        printAdminSeperators();
+        printBorders();
         cout << "| " << setw(9) << left << i << "| " << items.getAt(i)->toStringAdmin() << endl;
     }
 }
