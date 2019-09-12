@@ -497,47 +497,25 @@ void promptDuplicateItem(List<GMItem*>& items, const int& index) {
     AgeRestrictedItem * arPtr = nullptr;
     prPtr = dynamic_cast<PromptItem*>(items.getAt(index));          // RTTI to determine type of item
     arPtr = dynamic_cast<AgeRestrictedItem*>(items.getAt(index));
-    if(arPtr == nullptr && prPtr == nullptr) {
-        do {
+    do {
             bool codeSafe = false;
             do {
                 cout << "Enter the new unique item code: ";
                 getline(cin, input);
                 codeSafe = duplicate->setItemCode(input);
-                duplicate->setItemCode(input);
                 newCode = stoi(input);
             } while(!codeSafe);
             validCode = isCodeAvailible(items, input);
         } while(!validCode);
+    if(arPtr == nullptr && prPtr == nullptr) {
         *duplicate = *items.getAt(index);
+        duplicate->setItemCode(to_string(newCode));
         items.pushBack(duplicate); 
     } else if(arPtr != nullptr && prPtr == nullptr) {
-         do {
-            bool codeSafe = false;
-            do {
-                cout << "Enter the new unique item code: ";
-                getline(cin, input);
-                codeSafe = duplicate->setItemCode(input);
-                newCode = stoi(input);
-            } while(!codeSafe);
-            validCode = isCodeAvailible(items, input);
-        } while(!validCode);
-        delete duplicate;
         duplicate = new AgeRestrictedItem(arPtr->getMinAge(), arPtr->getItemName(), arPtr->getItemPrice(), arPtr->getNumOnHand());
         duplicate->setItemCode(to_string(newCode));
         items.pushBack(duplicate); 
     } else if(arPtr == nullptr && prPtr != nullptr) {
-        do {
-            bool codeSafe = false;
-            do {
-                cout << "Enter the new unique item code: ";
-                getline(cin, input);
-                codeSafe = duplicate->setItemCode(input);
-                newCode = stoi(input);
-            } while(!codeSafe);
-            validCode = isCodeAvailible(items, input);
-        } while(!validCode);
-        delete duplicate;
         duplicate = new PromptItem(prPtr->getPrompt(), prPtr->getItemName(), prPtr->getItemPrice(), prPtr->getNumOnHand());
         duplicate->setItemCode(to_string(newCode));
         items.pushBack(duplicate); 
