@@ -20,7 +20,7 @@ bool PromptItem::setPrompt(const string& prompt) {
     }
 }// end setprompt()
 
-string PromptItem::toStringBack() const {
+string PromptItem::toStringFile() const {
     ostringstream oss;
     oss << "pr," << prompt << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
@@ -31,12 +31,6 @@ string PromptItem::toStringAdmin() const {
     oss << setw(10) << left << code << " | " << setw(20) << name << " |" << setw(10) << right << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |" << " Prompt: " << right << setw(52) << getPrompt() << " |";
     return oss.str();
 }// and toStringAdmin()
-
-string PromptItem::toStringFile() const {
-    ostringstream oss;
-    oss << GMItem::toStringFile() << "," << getPrompt();
-    return oss.str();
-}// end toStringFile() 
 
 void PromptItem::operator =(const PromptItem& o) {
     name = o.name;

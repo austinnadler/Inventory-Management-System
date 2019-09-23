@@ -85,7 +85,7 @@ bool GMItem::setItemCode(const string& code) {
     
 }//end setItemCode()
 
-string GMItem::toStringBack() const {
+string GMItem::toStringFile() const {
     ostringstream oss;
     oss << "gm," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
@@ -96,12 +96,6 @@ string GMItem::toStringAdmin() const {
     oss << setw(10) << left << code << " | " << setw(20) << name  << right << " |" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |" << "                                                              " << "|";
     return oss.str();
 }//end toStringAdmin()
-
-string GMItem::toStringFile() const {
-    ostringstream oss;
-    oss << code << "," <<  name << "," << fixed << setprecision(2) << price << "," << numOnHand;
-    return oss.str();
-}//end toStringFile()
 
 void GMItem::operator =(const GMItem& o) {
     name = o.name;

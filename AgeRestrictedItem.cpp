@@ -16,7 +16,7 @@ bool AgeRestrictedItem::setMinAge(const string& minAge) {
     }
 }//end setMinAge()
 
-string AgeRestrictedItem::toStringBack() const {
+string AgeRestrictedItem::toStringFile() const {
     ostringstream oss;
     oss << "ar," << minAge << "," << name << "," << price << "," << numOnHand << "," << code;
     return oss.str();
@@ -27,12 +27,6 @@ string AgeRestrictedItem::toStringAdmin() const {
     oss << setw(10) << left << code << " | " << setw(20) << name  << right << " |" << setw(10) << fixed << setprecision(2) << price << " | " << left << setw(6) << numOnHand << " |" <<  " Minimum Age: " << right << setw(41) << getMinAge() << " years" << " |";
     return oss.str();
 }//end toStringAdmin()
-
-string AgeRestrictedItem::toStringFile() const {
-    ostringstream oss;
-    oss << GMItem::toStringFile() << "," << getMinAge();
-    return oss.str();
-}// end toStringFile()
 
 void AgeRestrictedItem::operator =(const AgeRestrictedItem& o) {
     name = o.name;

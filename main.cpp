@@ -37,10 +37,10 @@ void printHeader();
 void printBorders();
 void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items);        // take an ifs and an empty array and fill said array with items from a FORMATTED file
 void writeItems(ofstream& ofs, List<GMItem*>& items);               // take a provided ofstream and array of items and write them to the ofstream using the toStringFile() method
-void save(ofstream& ofs, List<GMItem*>& items);                     // writeBack() and close file.
 file_status_t openFileIn(ifstream& ifs, const string& fileName);    // use provided ifstream to open provided filename to read information from
 file_status_t openFileOut(ofstream& ofs, const string& fileName);   // use provided ofstream to open provided filename to write data to
 bool isCodeAvailible(List<GMItem*>& items, const string& code);     // check if item code is already taken
+void updateInventory(ofstream& ofs, List<GMItem*>& inventory);
 
 /* Used in several functions */
 string inFileName = "items.csv";
@@ -79,7 +79,8 @@ int main() {
         getline(cin, input);
 
         if(input == "exit") {
-            save(ofs, inventory);
+            openFileOut(ofs, inFileName);
+            updateInventory(ofs, inventory);
             return 0;
         }
         
@@ -123,22 +124,16 @@ int main() {
                         promptChangeNumberOnHand(itemPtr);
                     } else if(input == "2") {
                         promptChangePrice(itemPtr);    
-                        save(ofs, inventory);    
                     } else if(input == "3") {
                         promptChangeName(itemPtr);
-                        save(ofs, inventory);    
                     } else if (input == "4") {
                         promptChangeCode(itemPtr, inventory);
-                        save(ofs, inventory);    
                     } else if(input == "5") {
                         promptChangePrompt(inventory, index);
-                        save(ofs, inventory);    
                     } else if(input == "6") {
                         promptChangeMinAge(inventory, index);
-                        save(ofs, inventory);    
                     } else if(input == "7") {
                         promptDuplicateItem(inventory, index);
-                        save(ofs, inventory);
                         cout << "Item duplicated. Exit this function and select the new item's index to edit it." << endl;
                     }
                     cout << "Done editing this item? (at index: " << index << ") (y/n): ";
@@ -436,7 +431,6 @@ bool promptAddGMItem(List<GMItem*>& items) {
     GMItem * newPtr = new GMItem(name, stod(price), stoi(numOnHand), stoi(code));
     try {
         items.pushBack(newPtr);
-        save(ofs, items);
         return true;
     } catch (exception& e) { // Memory error
         cerr << "Error adding to List" << endl;
@@ -465,7 +459,6 @@ bool promptAddPromptItem(List<GMItem*>& items) {
             }
         }
     } while(!valid);     
-    save(ofs, items);
     return valid;
 }//end promptAddPromptItem()
 
@@ -483,8 +476,7 @@ bool promptAddAgeRestrictedItem(List<GMItem*>& items) {
             AgeRestrictedItem * newPtr = new AgeRestrictedItem(stoi(minAge), name, stod(price), stoi(numOnHand), stoi(code));
             items.pushBack(newPtr);
         }
-    } while(!valid);           
-    save(ofs, items);
+    } while(!valid);       
     return valid;
 }//end promptAddAgeRestrictedItem()
 
@@ -546,7 +538,6 @@ void promptDeleteItem(List<GMItem*>& items) {
         getline(cin, input);
         if(input == "y") {
             items.deleteAt(index);
-            save(ofs, items);
         } else if (input == "n") {
             return;
         }
@@ -607,12 +598,6 @@ void loadItemsFromFile(ifstream& ifs, List<GMItem*>& items) {
     }
 }//end loadItemsFromFile()
 
-void writeBack(ofstream& ofs, List<GMItem*>& items) {
-    for(int i = 0; i < items.size(); i++) {
-        ofs << items.getAt(i)->toStringBack() << endl;
-    }
-    // Doesn't close the file.
-}//end writeItems()
 void printHeader() {
     cout << "CODE        NAME                   PRICE       QTY OH   EXPIRATION / MIN. AGE" << endl;
 }
@@ -655,8 +640,9 @@ bool isCodeAvailible(List<GMItem*>& items, const string& code) {
     
 }//end isCodeAvailible() // FIX: Plan to impliment binary search
 
-void save(ofstream& ofs, List<GMItem*>& items) {
-    openFileOut(ofs, outFileName);
-    writeBack(ofs, items);
+void updateInventory(ofstream& ofs, List<GMItem*>& inventory) {
+    for(int i = 0; i < inventory.size(); i++) {
+        ofs << inventory.getAt(i)->toStringFile() << endl;
+    }
     ofs.close();
-}
+}// end updateInventory
